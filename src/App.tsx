@@ -10,6 +10,7 @@ import Entradas from "./pages/Entradas";
 import Saidas from "./pages/Saidas";
 import Auditoria from "./pages/Auditoria";
 import Usuarios from "./pages/Usuarios";
+import Permissoes from "./pages/Permissoes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/saidas" element={<Saidas />} />
             <Route path="/auditoria" element={<Auditoria />} />
             <Route path="/usuarios" element={<Usuarios />} />
+            <Route path="/permissoes" element={<Permissoes />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   X,
+  Shield,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     { href: "/saidas", icon: ArrowDownCircle, label: "Saídas", adminOnly: false },
     { href: "/auditoria", icon: ClipboardList, label: "Log de Auditoria", adminOnly: true },
     { href: "/usuarios", icon: Users, label: "Usuários", adminOnly: true },
+    { href: "/permissoes", icon: Shield, label: "Permissões", adminOnly: true },
   ];
 
   const filteredNavItems = navItems.filter((item) => !item.adminOnly || isAdmin);
