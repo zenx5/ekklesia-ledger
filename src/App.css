@@ -40,3 +40,44 @@
 .read-the-docs {
   color: #888;
 }
+
+@media print {
+  /* Ocultar todo el sitio */
+  body * {
+    visibility: hidden;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  /* Mostrar solo el contenido del Dialog */
+  /* Nota: Radix UI/Shadcn pone el contenido en un Portal, usualmente con role="dialog" */
+  [role="dialog"], [role="dialog"] * {
+    visibility: visible;
+  }
+
+  [role="dialog"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Ocultar botones y scrollbars en el PDF */
+  button, 
+  .btn,
+  [data-radix-collection] {
+    display: none !important;
+  }
+
+  /* Forzar que el ScrollArea se expanda para mostrar todo el contenido */
+  [data-radix-scroll-area-viewport] {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
