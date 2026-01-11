@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Shield,
+  IdCard
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -47,7 +48,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", adminOnly: false },
     { href: "/entradas", icon: FileText, label: "Entradas", adminOnly: false },
     { href: "/saidas", icon: ArrowDownCircle, label: "Saídas", adminOnly: false },
-    { href: "/miembros", icon: Users, label: "Miembros", adminOnly: false },
+    { href: "/miembros", icon: IdCard, label: "Membros", adminOnly: false },
     { href: "/auditoria", icon: ClipboardList, label: "Log de Auditoria", adminOnly: true },
     { href: "/usuarios", icon: Users, label: "Usuários", adminOnly: true },
     { href: "/permissoes", icon: Shield, label: "Permissões", adminOnly: true },
