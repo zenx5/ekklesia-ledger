@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Eye } from "lucide-react";
+import { Search, Eye, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Json } from "@/integrations/supabase/types";
 
@@ -86,6 +86,11 @@ export default function Auditoria() {
     };
     return <Badge variant={variants[action] || "default"}>{action}</Badge>;
   };
+
+  const printPdf = () => {
+    console.log( selectedLog )
+    window.print();
+  }
 
   const getTableLabel = (table: string) => {
     const labels: Record<string, string> = {
@@ -295,9 +300,15 @@ export default function Auditoria() {
         <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
           <DialogContent className="max-w-2xl max-h-[80vh]">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                Detalhes do Registro
-                {selectedLog && getActionBadge(selectedLog.action)}
+              <DialogTitle className="flex justify-between items-center gap-2">
+                <span className="gap-2 flex items-center">
+                  Detalhes do Registro
+                  {selectedLog && getActionBadge(selectedLog.action)}
+                </span>
+                <Button className="mr-10 items-center flex no-print" size="sm" onClick={printPdf}>
+                  <Printer />
+                  <>Imprimir</>
+                </Button>
               </DialogTitle>
             </DialogHeader>
             {selectedLog && (
