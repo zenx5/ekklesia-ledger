@@ -11,6 +11,7 @@ import Saidas from "./pages/Saidas";
 import Auditoria from "./pages/Auditoria";
 import Usuarios from "./pages/Usuarios";
 import Permissoes from "./pages/Permissoes";
+import Miembros from "./pages/Miembros";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/auditoria" element={<Auditoria />} />
             <Route path="/usuarios" element={<Usuarios />} />
             <Route path="/permissoes" element={<Permissoes />} />
+            <Route path="/miembros" element={<Miembros />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
