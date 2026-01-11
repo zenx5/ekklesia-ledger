@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, Save, FileText, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Autocomplete } from "@/components/ui/autocomplete";
 
 interface Tither {
   id?: string;
@@ -35,6 +36,7 @@ export default function Entradas() {
   const [loading, setLoading] = useState(false);
   const [reports, setReports] = useState<Report[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [members, setMembers] = useState<{ id:string, nome: string }[]>([])
 
   const [formData, setFormData] = useState({
     data_culto: new Date().toISOString().split("T")[0],
@@ -53,8 +55,17 @@ export default function Entradas() {
   ]);
 
   useEffect(() => {
+    fetchMembers();
     fetchReports();
   }, []);
+
+  const fetchMembers = async () => {
+    const { data } = await supabase
+      .from("members")
+      .select("*")
+
+    if( data ) setMembers( data.filter( item => item.status === 'ativo' ) )
+  }
 
   const fetchReports = async () => {
     const { data } = await supabase
@@ -307,7 +318,7 @@ export default function Entradas() {
                     </Button>
                   </CardHeader>
                   <CardContent className="pt-4">
-                    <Table>
+                    <Table className="relative w-full">
                       <TableHeader>
                         <TableRow className="ekklesia-table-header">
                           <TableHead className="w-[200px]">Valor (R$)</TableHead>
@@ -330,7 +341,8 @@ export default function Entradas() {
                               />
                             </TableCell>
                             <TableCell>
-                              <Input
+                              <Autocomplete
+                                options={members.map( item => item.nome )}
                                 value={tither.nome}
                                 onChange={(e) => updateTither(index, "nome", e.target.value)}
                                 placeholder="Nome do dizimista"
