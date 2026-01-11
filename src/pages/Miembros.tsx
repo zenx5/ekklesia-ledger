@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Search, Users } from "lucide-react";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
+import AppLayout from "@/components/layout/AppLayout";
 
 interface Member {
   id: string;
@@ -207,6 +208,7 @@ const Miembros = () => {
   }
 
   return (
+    <AppLayout>
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -494,6 +496,7 @@ const Miembros = () => {
         </Table>
       </div>
     </div>
+  </AppLayout>
   );
 };
 
