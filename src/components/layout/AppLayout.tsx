@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -132,6 +133,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 <p className="text-xs text-muted-foreground capitalize">{role || "operador"}</p>
               </div>
             </div>
+            <ChangePasswordDialog />
             <Button
               variant="ghost"
               className="w-full justify-start text-muted-foreground"
