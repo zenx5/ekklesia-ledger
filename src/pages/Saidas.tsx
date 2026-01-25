@@ -10,8 +10,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Save, Loader2 } from "lucide-react";
+import { Plus, Save, Loader2, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Expense {
   id: string;
@@ -61,10 +72,27 @@ export default function Saidas() {
     const { data } = await supabase
       .from("expenses")
       .select("*")
+      .is("deleted_at", null)
       .order("data_saida", { ascending: false })
       .limit(20);
 
     if (data) setExpenses(data as Expense[]);
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("expenses")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({ title: "Eliminado", description: "Registro eliminado correctamente." });
+      fetchExpenses();
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -277,12 +305,13 @@ export default function Saidas() {
                   <TableHead>Categoria</TableHead>
                   <TableHead>Pagamento</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
+                  <TableHead className="w-[60px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {expenses.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                       Nenhuma saída encontrada
                     </TableCell>
                   </TableRow>
@@ -295,6 +324,29 @@ export default function Saidas() {
                       <TableCell>{getPaymentLabel(expense.forma_pagamento)}</TableCell>
                       <TableCell className="text-right font-medium text-destructive">
                         {formatCurrency(Number(expense.valor))}
+                      </TableCell>
+                      <TableCell>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>¿Eliminar registro?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta acción ocultará el registro de la lista. Los datos se conservarán para auditoría.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(expense.id)}>
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   ))

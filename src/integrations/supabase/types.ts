@@ -79,6 +79,7 @@ export type Database = {
           categoria: string | null
           created_at: string
           data_saida: string
+          deleted_at: string | null
           descricao: string
           forma_pagamento: Database["public"]["Enums"]["forma_pagamento"]
           id: string
@@ -92,6 +93,7 @@ export type Database = {
           categoria?: string | null
           created_at?: string
           data_saida: string
+          deleted_at?: string | null
           descricao: string
           forma_pagamento?: Database["public"]["Enums"]["forma_pagamento"]
           id?: string
@@ -105,6 +107,7 @@ export type Database = {
           categoria?: string | null
           created_at?: string
           data_saida?: string
+          deleted_at?: string | null
           descricao?: string
           forma_pagamento?: Database["public"]["Enums"]["forma_pagamento"]
           id?: string
@@ -120,6 +123,7 @@ export type Database = {
         Row: {
           created_at: string
           data_culto: string
+          deleted_at: string | null
           diaconos_servico: string | null
           dizimos_total: number | null
           id: string
@@ -137,6 +141,7 @@ export type Database = {
         Insert: {
           created_at?: string
           data_culto: string
+          deleted_at?: string | null
           diaconos_servico?: string | null
           dizimos_total?: number | null
           id?: string
@@ -154,6 +159,7 @@ export type Database = {
         Update: {
           created_at?: string
           data_culto?: string
+          deleted_at?: string | null
           diaconos_servico?: string | null
           dizimos_total?: number | null
           id?: string
@@ -175,6 +181,7 @@ export type Database = {
           created_at: string
           data_membro: string | null
           data_nascimento: string | null
+          deleted_at: string | null
           email: string | null
           endereco: string | null
           id: string
@@ -188,6 +195,7 @@ export type Database = {
           created_at?: string
           data_membro?: string | null
           data_nascimento?: string | null
+          deleted_at?: string | null
           email?: string | null
           endereco?: string | null
           id?: string
@@ -201,6 +209,7 @@ export type Database = {
           created_at?: string
           data_membro?: string | null
           data_nascimento?: string | null
+          deleted_at?: string | null
           email?: string | null
           endereco?: string | null
           id?: string
@@ -323,6 +332,7 @@ export type Database = {
       tithers: {
         Row: {
           created_at: string
+          deleted_at: string | null
           forma_pagamento: Database["public"]["Enums"]["forma_pagamento"]
           id: string
           nome: string
@@ -331,6 +341,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           forma_pagamento?: Database["public"]["Enums"]["forma_pagamento"]
           id?: string
           nome: string
@@ -339,6 +350,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           forma_pagamento?: Database["public"]["Enums"]["forma_pagamento"]
           id?: string
           nome?: string
