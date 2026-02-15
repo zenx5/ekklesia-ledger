@@ -58,14 +58,25 @@ export default function Auditoria() {
       .limit(100);
 
     if (logsData) {
-      const userIds = [...new Set(logsData.map((l) => l.user_id))];
+      // Filter out soft-delete operations (UPDATEs that set deleted_at)
+      const filtered = logsData.filter((log) => {
+        if (log.action === "UPDATE" && log.new_data && typeof log.new_data === "object" && !Array.isArray(log.new_data)) {
+          const nd = log.new_data as Record<string, unknown>;
+          if (nd.deleted_at && (!log.old_data || !(log.old_data as Record<string, unknown>).deleted_at)) {
+            return false;
+          }
+        }
+        return true;
+      });
+
+      const userIds = [...new Set(filtered.map((l) => l.user_id))];
       const { data: profilesData } = await supabase
         .from("profiles")
         .select("user_id, nome")
         .in("user_id", userIds);
 
       const profilesMap = new Map(profilesData?.map((p) => [p.user_id, p]) || []);
-      const logsWithProfiles = logsData.map((log) => ({
+      const logsWithProfiles = filtered.map((log) => ({
         ...log,
         profiles: profilesMap.get(log.user_id) || null,
       }));
