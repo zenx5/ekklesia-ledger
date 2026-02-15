@@ -10,9 +10,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Save, FileText, Loader2 } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Autocomplete } from "@/components/ui/autocomplete";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Tither {
   id?: string;
@@ -30,26 +41,27 @@ interface Report {
   created_at: string;
 }
 
+const defaultFormData = {
+  data_culto: new Date().toISOString().split("T")[0],
+  pastores_presentes: "",
+  diaconos_servico: "",
+  preletor: "",
+  quantidade_presentes: 0,
+  quantidade_visitantes: 0,
+  quantidade_batizados: 0,
+  ofertas_gerais: 0,
+  observacoes: "",
+};
+
 export default function Entradas() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [reports, setReports] = useState<Report[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [members, setMembers] = useState<{ id:string, nome: string }[]>([])
-
-  const [formData, setFormData] = useState({
-    data_culto: new Date().toISOString().split("T")[0],
-    pastores_presentes: "",
-    diaconos_servico: "",
-    preletor: "",
-    quantidade_presentes: 0,
-    quantidade_visitantes: 0,
-    quantidade_batizados: 0,
-    ofertas_gerais: 0,
-    observacoes: "",
-  });
-
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [members, setMembers] = useState<{ id: string; nome: string }[]>([]);
+  const [formData, setFormData] = useState(defaultFormData);
   const [tithers, setTithers] = useState<Tither[]>([
     { nome: "", valor: 0, forma_pagamento: "dinheiro" },
   ]);
@@ -60,20 +72,18 @@ export default function Entradas() {
   }, []);
 
   const fetchMembers = async () => {
-    const { data } = await supabase
-      .from("members")
-      .select("*")
-
-    if( data ) setMembers( data.filter( item => item.status === 'ativo' ) )
-  }
+    const { data } = await supabase.from("members").select("*");
+    if (data) setMembers(data.filter((item) => item.status === "ativo"));
+  };
 
   const fetchReports = async () => {
     const { data } = await supabase
       .from("financial_reports")
       .select("id, data_culto, pastores_presentes, preletor, total_arrecadacao, created_at")
+      .is("deleted_at", null)
       .order("data_culto", { ascending: false })
       .limit(20);
-    
+
     if (data) setReports(data);
   };
 
@@ -96,51 +106,173 @@ export default function Entradas() {
     setTithers(updated);
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      // Soft delete the report
+      const { error } = await supabase
+        .from("financial_reports")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      // Soft delete associated tithers
+      await supabase
+        .from("tithers")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("report_id", id);
+
+      toast({ title: "Eliminado", description: "Relatório eliminado correctamente." });
+      fetchReports();
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    }
+  };
+
+  const openEdit = async (report: Report) => {
+    setEditingId(report.id);
+
+    // Fetch full report data
+    const { data: fullReport } = await supabase
+      .from("financial_reports")
+      .select("*")
+      .eq("id", report.id)
+      .single();
+
+    if (fullReport) {
+      setFormData({
+        data_culto: fullReport.data_culto,
+        pastores_presentes: fullReport.pastores_presentes || "",
+        diaconos_servico: fullReport.diaconos_servico || "",
+        preletor: fullReport.preletor || "",
+        quantidade_presentes: fullReport.quantidade_presentes || 0,
+        quantidade_visitantes: fullReport.quantidade_visitantes || 0,
+        quantidade_batizados: fullReport.quantidade_batizados || 0,
+        ofertas_gerais: fullReport.ofertas_gerais || 0,
+        observacoes: fullReport.observacoes || "",
+      });
+    }
+
+    // Fetch tithers for this report
+    const { data: reportTithers } = await supabase
+      .from("tithers")
+      .select("*")
+      .eq("report_id", report.id)
+      .is("deleted_at", null);
+
+    if (reportTithers && reportTithers.length > 0) {
+      setTithers(
+        reportTithers.map((t) => ({
+          id: t.id,
+          nome: t.nome,
+          valor: t.valor,
+          forma_pagamento: t.forma_pagamento as "dinheiro" | "pix" | "transferencia",
+        }))
+      );
+    } else {
+      setTithers([{ nome: "", valor: 0, forma_pagamento: "dinheiro" }]);
+    }
+
+    setDialogOpen(true);
+  };
+
+  const openNew = () => {
+    setEditingId(null);
+    setFormData(defaultFormData);
+    setTithers([{ nome: "", valor: 0, forma_pagamento: "dinheiro" }]);
+    setDialogOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
     setLoading(true);
     try {
-      // Insert financial report
-      const { data: reportData, error: reportError } = await supabase
-        .from("financial_reports")
-        .insert({
-          user_id: user.id,
-          data_culto: formData.data_culto,
-          pastores_presentes: formData.pastores_presentes,
-          diaconos_servico: formData.diaconos_servico,
-          preletor: formData.preletor,
-          quantidade_presentes: formData.quantidade_presentes,
-          quantidade_visitantes: formData.quantidade_visitantes,
-          quantidade_batizados: formData.quantidade_batizados,
-          ofertas_gerais: formData.ofertas_gerais,
-          dizimos_total: dizimosTotal,
-          total_arrecadacao: totalArrecadacao,
-          observacoes: formData.observacoes,
-        })
-        .select()
-        .single();
+      if (editingId) {
+        // Update report
+        const { error: reportError } = await supabase
+          .from("financial_reports")
+          .update({
+            data_culto: formData.data_culto,
+            pastores_presentes: formData.pastores_presentes,
+            diaconos_servico: formData.diaconos_servico,
+            preletor: formData.preletor,
+            quantidade_presentes: formData.quantidade_presentes,
+            quantidade_visitantes: formData.quantidade_visitantes,
+            quantidade_batizados: formData.quantidade_batizados,
+            ofertas_gerais: formData.ofertas_gerais,
+            dizimos_total: dizimosTotal,
+            total_arrecadacao: totalArrecadacao,
+            observacoes: formData.observacoes,
+          })
+          .eq("id", editingId);
 
-      if (reportError) throw reportError;
+        if (reportError) throw reportError;
 
-      // Insert tithers
-      const validTithers = tithers.filter((t) => t.nome && t.valor > 0);
-      if (validTithers.length > 0 && reportData) {
-        const { error: tithersError } = await supabase.from("tithers").insert(
-          validTithers.map((t) => ({
-            report_id: reportData.id,
-            nome: t.nome,
-            valor: t.valor,
-            forma_pagamento: t.forma_pagamento,
-          }))
-        );
-        if (tithersError) throw tithersError;
+        // Soft delete old tithers, then insert new ones
+        await supabase
+          .from("tithers")
+          .update({ deleted_at: new Date().toISOString() })
+          .eq("report_id", editingId);
+
+        const validTithers = tithers.filter((t) => t.nome && t.valor > 0);
+        if (validTithers.length > 0) {
+          const { error: tithersError } = await supabase.from("tithers").insert(
+            validTithers.map((t) => ({
+              report_id: editingId,
+              nome: t.nome,
+              valor: t.valor,
+              forma_pagamento: t.forma_pagamento,
+            }))
+          );
+          if (tithersError) throw tithersError;
+        }
+
+        toast({ title: "Sucesso!", description: "Relatório atualizado com sucesso." });
+      } else {
+        // Insert new report
+        const { data: reportData, error: reportError } = await supabase
+          .from("financial_reports")
+          .insert({
+            user_id: user.id,
+            data_culto: formData.data_culto,
+            pastores_presentes: formData.pastores_presentes,
+            diaconos_servico: formData.diaconos_servico,
+            preletor: formData.preletor,
+            quantidade_presentes: formData.quantidade_presentes,
+            quantidade_visitantes: formData.quantidade_visitantes,
+            quantidade_batizados: formData.quantidade_batizados,
+            ofertas_gerais: formData.ofertas_gerais,
+            dizimos_total: dizimosTotal,
+            total_arrecadacao: totalArrecadacao,
+            observacoes: formData.observacoes,
+          })
+          .select()
+          .single();
+
+        if (reportError) throw reportError;
+
+        const validTithers = tithers.filter((t) => t.nome && t.valor > 0);
+        if (validTithers.length > 0 && reportData) {
+          const { error: tithersError } = await supabase.from("tithers").insert(
+            validTithers.map((t) => ({
+              report_id: reportData.id,
+              nome: t.nome,
+              valor: t.valor,
+              forma_pagamento: t.forma_pagamento,
+            }))
+          );
+          if (tithersError) throw tithersError;
+        }
+
+        toast({ title: "Sucesso!", description: "Relatório financeiro salvo." });
       }
 
-      toast({ title: "Sucesso!", description: "Relatório financeiro salvo." });
       setDialogOpen(false);
-      resetForm();
+      setEditingId(null);
+      setFormData(defaultFormData);
+      setTithers([{ nome: "", valor: 0, forma_pagamento: "dinheiro" }]);
       fetchReports();
     } catch (error: any) {
       toast({ variant: "destructive", title: "Erro", description: error.message });
@@ -149,28 +281,10 @@ export default function Entradas() {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      data_culto: new Date().toISOString().split("T")[0],
-      pastores_presentes: "",
-      diaconos_servico: "",
-      preletor: "",
-      quantidade_presentes: 0,
-      quantidade_visitantes: 0,
-      quantidade_batizados: 0,
-      ofertas_gerais: 0,
-      observacoes: "",
-    });
-    setTithers([{ nome: "", valor: 0, forma_pagamento: "dinheiro" }]);
-  };
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-  };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("pt-BR");
-  };
+  const formatDate = (date: string) => new Date(date).toLocaleDateString("pt-BR");
 
   return (
     <AppLayout>
@@ -181,16 +295,16 @@ export default function Entradas() {
             <p className="text-muted-foreground">Registre as ofertas e dízimos dos cultos</p>
           </div>
 
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) { setEditingId(null); setFormData(defaultFormData); setTithers([{ nome: "", valor: 0, forma_pagamento: "dinheiro" }]); } }}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={openNew}>
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Relatório
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Novo Relatório Financeiro</DialogTitle>
+                <DialogTitle>{editingId ? "Editar Relatório Financeiro" : "Novo Relatório Financeiro"}</DialogTitle>
               </DialogHeader>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -202,40 +316,19 @@ export default function Entradas() {
                   <CardContent className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="data">Data</Label>
-                      <Input
-                        id="data"
-                        type="date"
-                        value={formData.data_culto}
-                        onChange={(e) => setFormData({ ...formData, data_culto: e.target.value })}
-                        required
-                      />
+                      <Input id="data" type="date" value={formData.data_culto} onChange={(e) => setFormData({ ...formData, data_culto: e.target.value })} required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="pastores">Pastores Presentes</Label>
-                      <Input
-                        id="pastores"
-                        value={formData.pastores_presentes}
-                        onChange={(e) => setFormData({ ...formData, pastores_presentes: e.target.value })}
-                        placeholder="Nomes dos pastores"
-                      />
+                      <Input id="pastores" value={formData.pastores_presentes} onChange={(e) => setFormData({ ...formData, pastores_presentes: e.target.value })} placeholder="Nomes dos pastores" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="diaconos">Diáconos em Serviço</Label>
-                      <Input
-                        id="diaconos"
-                        value={formData.diaconos_servico}
-                        onChange={(e) => setFormData({ ...formData, diaconos_servico: e.target.value })}
-                        placeholder="Nomes dos diáconos"
-                      />
+                      <Input id="diaconos" value={formData.diaconos_servico} onChange={(e) => setFormData({ ...formData, diaconos_servico: e.target.value })} placeholder="Nomes dos diáconos" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="preletor">Preletor</Label>
-                      <Input
-                        id="preletor"
-                        value={formData.preletor}
-                        onChange={(e) => setFormData({ ...formData, preletor: e.target.value })}
-                        placeholder="Nome do preletor"
-                      />
+                      <Input id="preletor" value={formData.preletor} onChange={(e) => setFormData({ ...formData, preletor: e.target.value })} placeholder="Nome do preletor" />
                     </div>
                   </CardContent>
                 </Card>
@@ -248,33 +341,15 @@ export default function Entradas() {
                   <CardContent className="pt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="presentes">Presentes</Label>
-                      <Input
-                        id="presentes"
-                        type="number"
-                        min="0"
-                        value={formData.quantidade_presentes}
-                        onChange={(e) => setFormData({ ...formData, quantidade_presentes: Number(e.target.value) })}
-                      />
+                      <Input id="presentes" type="number" min="0" value={formData.quantidade_presentes} onChange={(e) => setFormData({ ...formData, quantidade_presentes: Number(e.target.value) })} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="visitantes">Visitantes</Label>
-                      <Input
-                        id="visitantes"
-                        type="number"
-                        min="0"
-                        value={formData.quantidade_visitantes}
-                        onChange={(e) => setFormData({ ...formData, quantidade_visitantes: Number(e.target.value) })}
-                      />
+                      <Input id="visitantes" type="number" min="0" value={formData.quantidade_visitantes} onChange={(e) => setFormData({ ...formData, quantidade_visitantes: Number(e.target.value) })} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="batizados">Batizados/Recebidos</Label>
-                      <Input
-                        id="batizados"
-                        type="number"
-                        min="0"
-                        value={formData.quantidade_batizados}
-                        onChange={(e) => setFormData({ ...formData, quantidade_batizados: Number(e.target.value) })}
-                      />
+                      <Input id="batizados" type="number" min="0" value={formData.quantidade_batizados} onChange={(e) => setFormData({ ...formData, quantidade_batizados: Number(e.target.value) })} />
                     </div>
                   </CardContent>
                 </Card>
@@ -288,14 +363,7 @@ export default function Entradas() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="ofertas">Ofertas Gerais (R$)</Label>
-                        <Input
-                          id="ofertas"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={formData.ofertas_gerais}
-                          onChange={(e) => setFormData({ ...formData, ofertas_gerais: Number(e.target.value) })}
-                        />
+                        <Input id="ofertas" type="number" min="0" step="0.01" value={formData.ofertas_gerais} onChange={(e) => setFormData({ ...formData, ofertas_gerais: Number(e.target.value) })} />
                       </div>
                       <div className="space-y-2">
                         <Label>Dízimos (R$)</Label>
@@ -331,31 +399,14 @@ export default function Entradas() {
                         {tithers.map((tither, index) => (
                           <TableRow key={index}>
                             <TableCell>
-                              <Input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={tither.valor || ""}
-                                onChange={(e) => updateTither(index, "valor", Number(e.target.value))}
-                                placeholder="0.00"
-                              />
+                              <Input type="number" min="0" step="0.01" value={tither.valor || ""} onChange={(e) => updateTither(index, "valor", Number(e.target.value))} placeholder="0.00" />
                             </TableCell>
                             <TableCell>
-                              <Autocomplete
-                                options={members.map( item => item.nome )}
-                                value={tither.nome}
-                                onChange={(e) => updateTither(index, "nome", e.target.value)}
-                                placeholder="Nome do dizimista"
-                              />
+                              <Autocomplete options={members.map((item) => item.nome)} value={tither.nome} onChange={(e) => updateTither(index, "nome", e.target.value)} placeholder="Nome do dizimista" />
                             </TableCell>
                             <TableCell>
-                              <Select
-                                value={tither.forma_pagamento}
-                                onValueChange={(value) => updateTither(index, "forma_pagamento", value)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
+                              <Select value={tither.forma_pagamento} onValueChange={(value) => updateTither(index, "forma_pagamento", value)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="dinheiro">Dinheiro</SelectItem>
                                   <SelectItem value="pix">PIX</SelectItem>
@@ -364,13 +415,7 @@ export default function Entradas() {
                               </Select>
                             </TableCell>
                             <TableCell>
-                              <Button
-                                type="button"
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => removeTither(index)}
-                                disabled={tithers.length === 1}
-                              >
+                              <Button type="button" size="icon" variant="ghost" onClick={() => removeTither(index)} disabled={tithers.length === 1}>
                                 <Trash2 className="w-4 h-4 text-destructive" />
                               </Button>
                             </TableCell>
@@ -387,22 +432,15 @@ export default function Entradas() {
                     <CardTitle className="text-base">Observações</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-4">
-                    <Textarea
-                      value={formData.observacoes}
-                      onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                      placeholder="Observações adicionais..."
-                      rows={3}
-                    />
+                    <Textarea value={formData.observacoes} onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })} placeholder="Observações adicionais..." rows={3} />
                   </CardContent>
                 </Card>
 
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                    Cancelar
-                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
                   <Button type="submit" disabled={loading}>
                     {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                    Salvar Relatório
+                    {editingId ? "Atualizar Relatório" : "Salvar Relatório"}
                   </Button>
                 </div>
               </form>
@@ -423,14 +461,13 @@ export default function Entradas() {
                   <TableHead>Pastores</TableHead>
                   <TableHead>Preletor</TableHead>
                   <TableHead className="text-right">Total Arrecadado</TableHead>
+                  <TableHead className="w-[80px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {reports.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                      Nenhum relatório encontrado
-                    </TableCell>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhum relatório encontrado</TableCell>
                   </TableRow>
                 ) : (
                   reports.map((report) => (
@@ -438,8 +475,30 @@ export default function Entradas() {
                       <TableCell>{formatDate(report.data_culto)}</TableCell>
                       <TableCell>{report.pastores_presentes || "-"}</TableCell>
                       <TableCell>{report.preletor || "-"}</TableCell>
-                      <TableCell className="text-right font-medium">
-                        {formatCurrency(Number(report.total_arrecadacao))}
+                      <TableCell className="text-right font-medium">{formatCurrency(Number(report.total_arrecadacao))}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openEdit(report)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>¿Eliminar relatório?</AlertDialogTitle>
+                                <AlertDialogDescription>Esta acción ocultará el registro y sus dizimistas de la lista. Los datos se conservarán para auditoría.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(report.id)}>Eliminar</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
