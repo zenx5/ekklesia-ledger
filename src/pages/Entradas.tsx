@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TagInput } from "@/components/ui/tag-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -320,11 +321,11 @@ export default function Entradas() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="pastores">Pastores Presentes</Label>
-                      <Input id="pastores" value={formData.pastores_presentes} onChange={(e) => setFormData({ ...formData, pastores_presentes: e.target.value })} placeholder="Nomes dos pastores" />
+                      <TagInput id="pastores" value={formData.pastores_presentes} onChange={(val) => setFormData({ ...formData, pastores_presentes: val })} placeholder="Digite e pressione Enter" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="diaconos">Diáconos em Serviço</Label>
-                      <Input id="diaconos" value={formData.diaconos_servico} onChange={(e) => setFormData({ ...formData, diaconos_servico: e.target.value })} placeholder="Nomes dos diáconos" />
+                      <TagInput id="diaconos" value={formData.diaconos_servico} onChange={(val) => setFormData({ ...formData, diaconos_servico: val })} placeholder="Digite e pressione Enter" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="preletor">Preletor</Label>
