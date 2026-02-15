@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Save, Loader2, Trash2 } from "lucide-react";
+import { Plus, Save, Loader2, Trash2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -32,6 +32,7 @@ interface Expense {
   valor: number;
   forma_pagamento: string;
   responsavel: string;
+  observacoes: string;
   created_at: string;
 }
 
@@ -47,22 +48,24 @@ const CATEGORIES = [
   "Outros",
 ];
 
+const defaultForm = {
+  data_saida: new Date().toISOString().split("T")[0],
+  descricao: "",
+  categoria: "",
+  valor: 0,
+  forma_pagamento: "dinheiro" as "dinheiro" | "pix" | "transferencia",
+  responsavel: "",
+  observacoes: "",
+};
+
 export default function Saidas() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  const [formData, setFormData] = useState({
-    data_saida: new Date().toISOString().split("T")[0],
-    descricao: "",
-    categoria: "",
-    valor: 0,
-    forma_pagamento: "dinheiro" as "dinheiro" | "pix" | "transferencia",
-    responsavel: "",
-    observacoes: "",
-  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState(defaultForm);
 
   useEffect(() => {
     fetchExpenses();
@@ -87,12 +90,31 @@ export default function Saidas() {
         .eq("id", id);
 
       if (error) throw error;
-
       toast({ title: "Eliminado", description: "Registro eliminado correctamente." });
       fetchExpenses();
     } catch (error: any) {
       toast({ variant: "destructive", title: "Error", description: error.message });
     }
+  };
+
+  const openEdit = (expense: Expense) => {
+    setEditingId(expense.id);
+    setFormData({
+      data_saida: expense.data_saida,
+      descricao: expense.descricao,
+      categoria: expense.categoria || "",
+      valor: expense.valor,
+      forma_pagamento: expense.forma_pagamento as "dinheiro" | "pix" | "transferencia",
+      responsavel: expense.responsavel || "",
+      observacoes: expense.observacoes || "",
+    });
+    setDialogOpen(true);
+  };
+
+  const openNew = () => {
+    setEditingId(null);
+    setFormData(defaultForm);
+    setDialogOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,22 +128,41 @@ export default function Saidas() {
 
     setLoading(true);
     try {
-      const { error } = await supabase.from("expenses").insert({
-        user_id: user.id,
-        data_saida: formData.data_saida,
-        descricao: formData.descricao,
-        categoria: formData.categoria,
-        valor: formData.valor,
-        forma_pagamento: formData.forma_pagamento,
-        responsavel: formData.responsavel,
-        observacoes: formData.observacoes,
-      });
+      if (editingId) {
+        const { error } = await supabase
+          .from("expenses")
+          .update({
+            data_saida: formData.data_saida,
+            descricao: formData.descricao,
+            categoria: formData.categoria,
+            valor: formData.valor,
+            forma_pagamento: formData.forma_pagamento,
+            responsavel: formData.responsavel,
+            observacoes: formData.observacoes,
+          })
+          .eq("id", editingId);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast({ title: "Sucesso!", description: "Saída atualizada com sucesso." });
+      } else {
+        const { error } = await supabase.from("expenses").insert({
+          user_id: user.id,
+          data_saida: formData.data_saida,
+          descricao: formData.descricao,
+          categoria: formData.categoria,
+          valor: formData.valor,
+          forma_pagamento: formData.forma_pagamento,
+          responsavel: formData.responsavel,
+          observacoes: formData.observacoes,
+        });
 
-      toast({ title: "Sucesso!", description: "Saída registrada com sucesso." });
+        if (error) throw error;
+        toast({ title: "Sucesso!", description: "Saída registrada com sucesso." });
+      }
+
       setDialogOpen(false);
-      resetForm();
+      setEditingId(null);
+      setFormData(defaultForm);
       fetchExpenses();
     } catch (error: any) {
       toast({ variant: "destructive", title: "Erro", description: error.message });
@@ -130,32 +171,13 @@ export default function Saidas() {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      data_saida: new Date().toISOString().split("T")[0],
-      descricao: "",
-      categoria: "",
-      valor: 0,
-      forma_pagamento: "dinheiro",
-      responsavel: "",
-      observacoes: "",
-    });
-  };
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-  };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("pt-BR");
-  };
+  const formatDate = (date: string) => new Date(date).toLocaleDateString("pt-BR");
 
   const getPaymentLabel = (payment: string) => {
-    const labels: Record<string, string> = {
-      dinheiro: "Dinheiro",
-      pix: "PIX",
-      transferencia: "Transferência",
-    };
+    const labels: Record<string, string> = { dinheiro: "Dinheiro", pix: "PIX", transferencia: "Transferência" };
     return labels[payment] || payment;
   };
 
@@ -168,85 +190,49 @@ export default function Saidas() {
             <p className="text-muted-foreground">Registre os gastos e despesas da igreja</p>
           </div>
 
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) { setEditingId(null); setFormData(defaultForm); } }}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={openNew}>
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Saída
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle>Registrar Saída</DialogTitle>
+                <DialogTitle>{editingId ? "Editar Saída" : "Registrar Saída"}</DialogTitle>
               </DialogHeader>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="data">Data *</Label>
-                    <Input
-                      id="data"
-                      type="date"
-                      value={formData.data_saida}
-                      onChange={(e) => setFormData({ ...formData, data_saida: e.target.value })}
-                      required
-                    />
+                    <Input id="data" type="date" value={formData.data_saida} onChange={(e) => setFormData({ ...formData, data_saida: e.target.value })} required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="valor">Valor (R$) *</Label>
-                    <Input
-                      id="valor"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={formData.valor || ""}
-                      onChange={(e) => setFormData({ ...formData, valor: Number(e.target.value) })}
-                      required
-                    />
+                    <Input id="valor" type="number" min="0" step="0.01" value={formData.valor || ""} onChange={(e) => setFormData({ ...formData, valor: Number(e.target.value) })} required />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="descricao">Descrição *</Label>
-                  <Input
-                    id="descricao"
-                    value={formData.descricao}
-                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                    placeholder="Descrição da despesa"
-                    required
-                  />
+                  <Input id="descricao" value={formData.descricao} onChange={(e) => setFormData({ ...formData, descricao: e.target.value })} placeholder="Descrição da despesa" required />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="categoria">Categoria</Label>
-                    <Select
-                      value={formData.categoria}
-                      onValueChange={(value) => setFormData({ ...formData, categoria: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
+                    <Select value={formData.categoria} onValueChange={(value) => setFormData({ ...formData, categoria: value })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                       <SelectContent>
-                        {CATEGORIES.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat}
-                          </SelectItem>
-                        ))}
+                        {CATEGORIES.map((cat) => (<SelectItem key={cat} value={cat}>{cat}</SelectItem>))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="pagamento">Forma de Pagamento</Label>
-                    <Select
-                      value={formData.forma_pagamento}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, forma_pagamento: value as "dinheiro" | "pix" | "transferencia" })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
+                    <Select value={formData.forma_pagamento} onValueChange={(value) => setFormData({ ...formData, forma_pagamento: value as "dinheiro" | "pix" | "transferencia" })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="dinheiro">Dinheiro</SelectItem>
                         <SelectItem value="pix">PIX</SelectItem>
@@ -258,32 +244,19 @@ export default function Saidas() {
 
                 <div className="space-y-2">
                   <Label htmlFor="responsavel">Responsável</Label>
-                  <Input
-                    id="responsavel"
-                    value={formData.responsavel}
-                    onChange={(e) => setFormData({ ...formData, responsavel: e.target.value })}
-                    placeholder="Nome do responsável"
-                  />
+                  <Input id="responsavel" value={formData.responsavel} onChange={(e) => setFormData({ ...formData, responsavel: e.target.value })} placeholder="Nome do responsável" />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="observacoes">Observações</Label>
-                  <Textarea
-                    id="observacoes"
-                    value={formData.observacoes}
-                    onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                    placeholder="Observações adicionais..."
-                    rows={2}
-                  />
+                  <Textarea id="observacoes" value={formData.observacoes} onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })} placeholder="Observações adicionais..." rows={2} />
                 </div>
 
                 <div className="flex justify-end gap-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                    Cancelar
-                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
                   <Button type="submit" disabled={loading}>
                     {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                    Salvar
+                    {editingId ? "Atualizar" : "Salvar"}
                   </Button>
                 </div>
               </form>
@@ -291,7 +264,6 @@ export default function Saidas() {
           </Dialog>
         </div>
 
-        {/* Expenses List */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Saídas Recentes</CardTitle>
@@ -305,15 +277,13 @@ export default function Saidas() {
                   <TableHead>Categoria</TableHead>
                   <TableHead>Pagamento</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
-                  <TableHead className="w-[60px]"></TableHead>
+                  <TableHead className="w-[80px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {expenses.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                      Nenhuma saída encontrada
-                    </TableCell>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhuma saída encontrada</TableCell>
                   </TableRow>
                 ) : (
                   expenses.map((expense) => (
@@ -322,31 +292,30 @@ export default function Saidas() {
                       <TableCell>{expense.descricao}</TableCell>
                       <TableCell>{expense.categoria || "-"}</TableCell>
                       <TableCell>{getPaymentLabel(expense.forma_pagamento)}</TableCell>
-                      <TableCell className="text-right font-medium text-destructive">
-                        {formatCurrency(Number(expense.valor))}
-                      </TableCell>
+                      <TableCell className="text-right font-medium text-destructive">{formatCurrency(Number(expense.valor))}</TableCell>
                       <TableCell>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>¿Eliminar registro?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Esta acción ocultará el registro de la lista. Los datos se conservarán para auditoría.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(expense.id)}>
-                                Eliminar
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openEdit(expense)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>¿Eliminar registro?</AlertDialogTitle>
+                                <AlertDialogDescription>Esta acción ocultará el registro de la lista. Los datos se conservarán para auditoría.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(expense.id)}>Eliminar</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
