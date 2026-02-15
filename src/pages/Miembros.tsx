@@ -105,11 +105,11 @@ const Miembros = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["members"] });
-      toast.success("Miembro creado exitosamente");
+      toast.success("Membro criado com sucesso");
       resetForm();
     },
     onError: (error) => {
-      toast.error("Error al crear miembro: " + error.message);
+      toast.error("Erro ao criar membro: " + error.message);
     },
   });
 
@@ -132,11 +132,11 @@ const Miembros = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["members"] });
-      toast.success("Miembro actualizado exitosamente");
+      toast.success("Membro atualizado com sucesso");
       resetForm();
     },
     onError: (error) => {
-      toast.error("Error al actualizar miembro: " + error.message);
+      toast.error("Erro ao atualizar membro: " + error.message);
     },
   });
 
@@ -147,10 +147,10 @@ const Miembros = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["members"] });
-      toast.success("Miembro eliminado exitosamente");
+      toast.success("Membro removido com sucesso");
     },
     onError: (error) => {
-      toast.error("Error al eliminar miembro: " + error.message);
+      toast.error("Erro ao excluir membro: " + error.message);
     },
   });
 
@@ -178,7 +178,7 @@ const Miembros = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.nome.trim()) {
-      toast.error("El nombre es obligatorio");
+      toast.error("O nome é obrigatório.");
       return;
     }
 
@@ -212,9 +212,9 @@ const Miembros = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Miembros</h1>
+          <h1 className="text-2xl font-bold text-foreground">Membros</h1>
           <p className="text-muted-foreground">
-            Control de membresía de la iglesia
+            Controle de membros da igreja
           </p>
         </div>
         {isAdmin && (
@@ -222,7 +222,7 @@ const Miembros = () => {
             <DialogTrigger asChild>
               <Button onClick={() => resetForm()}>
                 <Plus className="h-4 w-4 mr-2" />
-                Nuevo Miembro
+                Novo membro
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -233,7 +233,7 @@ const Miembros = () => {
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nome">Nombre *</Label>
+                  <Label htmlFor="nome">Nome *</Label>
                   <Input
                     id="nome"
                     value={formData.nome}
@@ -257,7 +257,7 @@ const Miembros = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="telefone">Teléfono</Label>
+                  <Label htmlFor="telefone">Telefono</Label>
                   <Input
                     id="telefone"
                     value={formData.telefone}
@@ -268,7 +268,7 @@ const Miembros = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="endereco">Dirección</Label>
+                  <Label htmlFor="endereco">Endereço</Label>
                   <Input
                     id="endereco"
                     value={formData.endereco}
@@ -280,7 +280,7 @@ const Miembros = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="data_nascimento">Fecha de Nacimiento</Label>
+                    <Label htmlFor="data_nascimento">Data de Nascimento</Label>
                     <Input
                       id="data_nascimento"
                       type="date"
@@ -295,7 +295,7 @@ const Miembros = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="data_membro">Fecha de Membresía</Label>
+                    <Label htmlFor="data_membro">Data de Adesão</Label>
                     <Input
                       id="data_membro"
                       type="date"
@@ -319,8 +319,8 @@ const Miembros = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ativo">Activo</SelectItem>
-                      <SelectItem value="inativo">Inactivo</SelectItem>
+                      <SelectItem value="ativo">Ativo</SelectItem>
+                      <SelectItem value="inativo">Inativo</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -351,7 +351,7 @@ const Miembros = () => {
                       createMutation.isPending || updateMutation.isPending
                     }
                   >
-                    {editingMember ? "Actualizar" : "Crear"}
+                    {editingMember ? "Atualizar" : "Criar"}
                   </Button>
                 </div>
               </form>
@@ -368,7 +368,7 @@ const Miembros = () => {
               <Users className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Total Miembros</p>
+              <p className="text-sm text-muted-foreground">Total de membros</p>
               <p className="text-2xl font-bold">{members.length}</p>
             </div>
           </div>
@@ -379,7 +379,7 @@ const Miembros = () => {
               <Users className="h-5 w-5 text-green-500" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Activos</p>
+              <p className="text-sm text-muted-foreground">Ativos</p>
               <p className="text-2xl font-bold">{activeCount}</p>
             </div>
           </div>
@@ -390,7 +390,7 @@ const Miembros = () => {
               <Users className="h-5 w-5 text-muted-foreground" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Inactivos</p>
+              <p className="text-sm text-muted-foreground">Inativos</p>
               <p className="text-2xl font-bold">{inactiveCount}</p>
             </div>
           </div>
@@ -401,7 +401,7 @@ const Miembros = () => {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar por nombre, email o teléfono..."
+          placeholder="Pesquise por nome, e-mail ou número de telefone..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
@@ -413,14 +413,14 @@ const Miembros = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nombre</TableHead>
+              <TableHead>Nome</TableHead>
               <TableHead className="hidden sm:table-cell">Email</TableHead>
-              <TableHead className="hidden md:table-cell">Teléfono</TableHead>
+              <TableHead className="hidden md:table-cell">Telefono</TableHead>
               <TableHead className="hidden lg:table-cell">
-                Fecha Membresía
+                Data de adesão
               </TableHead>
               <TableHead>Estado</TableHead>
-              {isAdmin && <TableHead className="w-[100px]">Acciones</TableHead>}
+              {isAdmin && <TableHead className="w-[100px]">Ações</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -431,8 +431,8 @@ const Miembros = () => {
                   className="text-center py-8 text-muted-foreground"
                 >
                   {searchTerm
-                    ? "No se encontraron miembros"
-                    : "No hay miembros registrados"}
+                    ? "Não foram encontrados membros"
+                    : "Não há membros registrados"}
                 </TableCell>
               </TableRow>
             ) : (
@@ -477,7 +477,7 @@ const Miembros = () => {
                           onClick={() => {
                             if (
                               confirm(
-                                "¿Estás seguro de eliminar este miembro?"
+                                "Tem certeza de que deseja remover este membro?"
                               )
                             ) {
                               deleteMutation.mutate(member.id);
