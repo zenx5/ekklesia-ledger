@@ -30,7 +30,7 @@ interface Tither {
   id?: string;
   nome: string;
   valor: number;
-  forma_pagamento: "dinheiro" | "pix" | "transferencia";
+  forma_pagamento: "dinheiro" | "pix" | "transferencia" | "boleto";
 }
 
 interface Report {
@@ -167,7 +167,7 @@ export default function Entradas() {
           id: t.id,
           nome: t.nome,
           valor: t.valor,
-          forma_pagamento: t.forma_pagamento as "dinheiro" | "pix" | "transferencia",
+          forma_pagamento: t.forma_pagamento as "dinheiro" | "pix" | "transferencia" | "boleto",
         }))
       );
     } else {
@@ -412,6 +412,7 @@ export default function Entradas() {
                                   <SelectItem value="dinheiro">Dinheiro</SelectItem>
                                   <SelectItem value="pix">PIX</SelectItem>
                                   <SelectItem value="transferencia">Transferência</SelectItem>
+                                  <SelectItem value="boleto">Boleto</SelectItem>
                                 </SelectContent>
                               </Select>
                             </TableCell>

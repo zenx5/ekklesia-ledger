@@ -53,7 +53,7 @@ const defaultForm = {
   descricao: "",
   categoria: "",
   valor: 0,
-  forma_pagamento: "dinheiro" as "dinheiro" | "pix" | "transferencia",
+  forma_pagamento: "dinheiro" as "dinheiro" | "pix" | "transferencia" | "boleto",
   responsavel: "",
   observacoes: "",
 };
@@ -104,7 +104,7 @@ export default function Saidas() {
       descricao: expense.descricao,
       categoria: expense.categoria || "",
       valor: expense.valor,
-      forma_pagamento: expense.forma_pagamento as "dinheiro" | "pix" | "transferencia",
+      forma_pagamento: expense.forma_pagamento as "dinheiro" | "pix" | "transferencia" | "boleto",
       responsavel: expense.responsavel || "",
       observacoes: expense.observacoes || "",
     });
@@ -177,7 +177,7 @@ export default function Saidas() {
   const formatDate = (date: string) => new Date(date).toLocaleDateString("pt-BR");
 
   const getPaymentLabel = (payment: string) => {
-    const labels: Record<string, string> = { dinheiro: "Dinheiro", pix: "PIX", transferencia: "Transferência" };
+    const labels: Record<string, string> = { dinheiro: "Dinheiro", pix: "PIX", transferencia: "Transferência", boleto: "Boleto" };
     return labels[payment] || payment;
   };
 
@@ -231,12 +231,13 @@ export default function Saidas() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="pagamento">Forma de Pagamento</Label>
-                    <Select value={formData.forma_pagamento} onValueChange={(value) => setFormData({ ...formData, forma_pagamento: value as "dinheiro" | "pix" | "transferencia" })}>
+                    <Select value={formData.forma_pagamento} onValueChange={(value) => setFormData({ ...formData, forma_pagamento: value as "dinheiro" | "pix" | "transferencia" | "boleto" })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="dinheiro">Dinheiro</SelectItem>
                         <SelectItem value="pix">PIX</SelectItem>
                         <SelectItem value="transferencia">Transferência</SelectItem>
+                        <SelectItem value="boleto">Boleto</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

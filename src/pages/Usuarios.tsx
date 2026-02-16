@@ -26,6 +26,14 @@ interface UserProfile {
   user_roles?: { role: string }[];
 }
 
+interface CustomRole {
+  id: string;
+  name: string;
+  description: string | null;
+  is_system: boolean;
+  created_at: string;
+}
+
 const createUserSchema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
   email: z.string().email("E-mail inválido").max(255),
@@ -38,6 +46,7 @@ export default function Usuarios() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [roles, setRoles] = useState<CustomRole[]>([])
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -62,6 +71,7 @@ export default function Usuarios() {
     }
   }, [isAdmin]);
 
+  
   const fetchUsers = async () => {
     setLoading(true);
     const { data: profilesData } = await supabase
@@ -69,13 +79,21 @@ export default function Usuarios() {
       .select("*")
       .order("created_at", { ascending: false });
 
+    const { data:resRoleData } = await supabase.from("custom_roles")
+      .select("*")
+      .order("is_system", { ascending: false })
+      .order("name")    
+    setRoles( resRoleData )
+
+
     if (profilesData) {
       const userIds = profilesData.map((p) => p.user_id);
       const { data: rolesData } = await supabase
         .from("user_roles")
         .select("user_id, role")
         .in("user_id", userIds);
-
+      
+      
       const rolesMap = new Map(rolesData?.map((r) => [r.user_id, [r]]) || []);
       const usersWithRoles = profilesData.map((profile) => ({
         ...profile,
@@ -258,18 +276,14 @@ export default function Usuarios() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="operador">
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4" />
-                          Operador
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="admin">
-                        <div className="flex items-center gap-2">
-                          <Shield className="w-4 h-4" />
-                          Administrador
-                        </div>
-                      </SelectItem>
+                      { roles.map( role => (
+                        <SelectItem value={role.name}>
+                          <div className="flex items-center gap-2 capitalize">
+                            <Shield className="w-4 h-4" />
+                            { role.name }
+                          </div>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -332,12 +346,15 @@ export default function Usuarios() {
                               onValueChange={(value) => updateUserRole(user.user_id, value as "admin" | "operador")}
                               disabled={isCurrentUser}
                             >
-                              <SelectTrigger className="w-32">
+                              <SelectTrigger className="w-32 capitalize">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="operador">Operador</SelectItem>
-                                <SelectItem value="admin">Admin</SelectItem>
+                                { roles.map( role => (
+                                  <SelectItem value={role.name} className="capitalize">
+                                      { role.name }
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </TableCell>
