@@ -228,7 +228,7 @@ const Miembros = () => {
             <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
-                  {editingMember ? "Editar Miembro" : "Nuevo Miembro"}
+                  {editingMember ? "Editar Membro" : "Novo Membro"}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
