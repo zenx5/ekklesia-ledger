@@ -185,6 +185,31 @@ export default function Entradas() {
     setDialogOpen(true);
   };
 
+  const handlePrintEntrada = async (reportId: string) => {
+    const { data: fullReport } = await supabase
+      .from("financial_reports")
+      .select("*")
+      .eq("id", reportId)
+      .single();
+
+    if (!fullReport) return;
+
+    const { data: reportTithers } = await supabase
+      .from("tithers")
+      .select("nome, valor, forma_pagamento")
+      .eq("report_id", reportId)
+      .is("deleted_at", null);
+
+    generateEntradaPDF({
+      ...fullReport,
+      tithers: (reportTithers || []).map((t) => ({
+        nome: t.nome,
+        valor: Number(t.valor),
+        forma_pagamento: t.forma_pagamento,
+      })),
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
