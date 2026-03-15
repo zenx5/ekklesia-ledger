@@ -12,6 +12,7 @@ import Auditoria from "./pages/Auditoria";
 import Usuarios from "./pages/Usuarios";
 import Permissoes from "./pages/Permissoes";
 import Miembros from "./pages/Miembros";
+import Relatorios from "./pages/Relatorios";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
