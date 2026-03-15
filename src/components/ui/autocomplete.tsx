@@ -56,7 +56,7 @@ const Autocomplete = React.forwardRef<HTMLInputElement, AutocompleteProps>(
       setIsOpen(false);
     };
 
-    console.log( filteredOptions )
+    
 
     return (
       <div className="relative w-full" ref={containerRef}>
