@@ -13,7 +13,8 @@ import {
   Menu,
   X,
   Shield,
-  IdCard
+  IdCard,
+  BarChart3
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -50,6 +51,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     { href: "/entradas", icon: FileText, label: "Entradas", adminOnly: false },
     { href: "/saidas", icon: ArrowDownCircle, label: "Saídas", adminOnly: false },
     { href: "/miembros", icon: IdCard, label: "Membros", adminOnly: false },
+    { href: "/relatorios", icon: BarChart3, label: "Relatórios", adminOnly: false },
     { href: "/auditoria", icon: ClipboardList, label: "Log de Auditoria", adminOnly: true },
     { href: "/usuarios", icon: Users, label: "Usuários", adminOnly: true },
     { href: "/permissoes", icon: Shield, label: "Permissões", adminOnly: true },
