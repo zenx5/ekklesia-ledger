@@ -86,7 +86,7 @@ export default function Auditoria() {
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleString("pt-BR");
+    return new Date(date + 'T12:00:00').toLocaleDateString('pt-BR');
   };
 
   const getActionBadge = (action: string) => {

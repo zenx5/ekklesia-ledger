@@ -194,7 +194,7 @@ export default function Usuarios() {
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("pt-BR");
+    return new Date(date + 'T12:00:00').toLocaleDateString('pt-BR');
   };
 
   if (authLoading) {
