@@ -403,7 +403,7 @@ export default function Entradas() {
                               <Input type="number" min="0" step="0.01" value={tither.valor || ""} onChange={(e) => updateTither(index, "valor", Number(e.target.value))} placeholder="0.00" />
                             </TableCell>
                             <TableCell>
-                              <Autocomplete options={members.map((item) => item.nome)} value={tither.nome} onChange={(e) => updateTither(index, "nome", e.target.value)} placeholder="Nome do dizimista" />
+                              <Autocomplete options={members.map((item) => item.nome)} value={tither.nome} onValueChange={(val) => updateTither(index, "nome", val)} placeholder="Nome do dizimista" />
                             </TableCell>
                             <TableCell>
                               <Select value={tither.forma_pagamento} onValueChange={(value) => updateTither(index, "forma_pagamento", value)}>
