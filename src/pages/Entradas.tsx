@@ -11,7 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Save, Loader2, Pencil } from "lucide-react";
+import { Plus, Trash2, Save, Loader2, Pencil, Printer } from "lucide-react";
+import { generateEntradaPDF } from "@/lib/pdf-reports";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Autocomplete } from "@/components/ui/autocomplete";
 import {
@@ -182,6 +183,31 @@ export default function Entradas() {
     setFormData(defaultFormData);
     setTithers([{ nome: "", valor: 0, forma_pagamento: "dinheiro" }]);
     setDialogOpen(true);
+  };
+
+  const handlePrintEntrada = async (reportId: string) => {
+    const { data: fullReport } = await supabase
+      .from("financial_reports")
+      .select("*")
+      .eq("id", reportId)
+      .single();
+
+    if (!fullReport) return;
+
+    const { data: reportTithers } = await supabase
+      .from("tithers")
+      .select("nome, valor, forma_pagamento")
+      .eq("report_id", reportId)
+      .is("deleted_at", null);
+
+    generateEntradaPDF({
+      ...fullReport,
+      tithers: (reportTithers || []).map((t) => ({
+        nome: t.nome,
+        valor: Number(t.valor),
+        forma_pagamento: t.forma_pagamento,
+      })),
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -480,8 +506,10 @@ export default function Entradas() {
                       <TableCell className="text-right font-medium">{formatCurrency(Number(report.total_arrecadacao))}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handlePrintEntrada(report.id)} title="Imprimir PDF">
+                            <Printer className="h-4 w-4" />
+                          </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openEdit(report)}>
-                            <Pencil className="h-4 w-4" />
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
