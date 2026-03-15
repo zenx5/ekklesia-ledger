@@ -85,7 +85,7 @@ export default function Relatorios() {
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
   const formatDate = (date: string) =>
-    new Date(date + "T00:00:00").toLocaleDateString("pt-BR");
+    new Date(date + "T12:00:00").toLocaleDateString("pt-BR");
 
   const totalEntradas = entradas.reduce((sum, e) => sum + Number(e.total_arrecadacao || 0), 0);
   const totalSaidas = saidas.reduce((sum, e) => sum + Number(e.valor || 0), 0);

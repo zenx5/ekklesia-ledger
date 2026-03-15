@@ -175,7 +175,7 @@ export default function Saidas() {
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
-  const formatDate = (date: string) => new Date(date).toLocaleDateString("pt-BR");
+  const formatDate = (date: string) => new Date(date+ 'T12:00:00').toLocaleDateString('pt-BR');
 
   const getPaymentLabel = (payment: string) => {
     const labels: Record<string, string> = { dinheiro: "Dinheiro", pix: "PIX", transferencia: "Transferência", boleto: "Boleto" };
