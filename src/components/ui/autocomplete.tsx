@@ -13,7 +13,10 @@ const Autocomplete = React.forwardRef<HTMLInputElement, AutocompleteProps>(
     const [isOpen, setIsOpen] = React.useState(false);
     const [filteredOptions, setFilteredOptions] = React.useState<string[]>([]);
     const containerRef = React.useRef<HTMLDivElement>(null);
-    console.log( options )
+
+    React.useEffect(() => {
+      setInputValue(value?.toString() || "");
+    }, [value]);
     React.useEffect(() => {
       if( options.length === 0 ) return
       if( inputValue.length > 0 ) return
