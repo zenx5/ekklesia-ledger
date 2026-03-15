@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { TrendingUp, TrendingDown, DollarSign, FileSearch } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import PeriodFilter from "@/components/PeriodFilter";
 
 interface ReportEntry {
   id: string;
@@ -99,24 +100,14 @@ export default function Relatorios() {
         </div>
 
         {/* Period Filter */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-end">
-              <div className="flex-1 space-y-2">
-                <Label>Data Inicial</Label>
-                <Input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
-              </div>
-              <div className="flex-1 space-y-2">
-                <Label>Data Final</Label>
-                <Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
-              </div>
-              <Button onClick={fetchReport} disabled={loading} className="w-full sm:w-auto">
-                <FileSearch className="w-4 h-4 mr-2" />
-                {loading ? "Buscando..." : "Gerar Relatório"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <PeriodFilter
+          loading={loading}
+          dataInicio={dataInicio}
+          dataFim={dataFim}
+          onChangeInicio={setDataInicio}
+          onChangeFim={setDataFim}
+          onClick={fetchReport}
+        />
 
         {searched && !loading && (
           <>

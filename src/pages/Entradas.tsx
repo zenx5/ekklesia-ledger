@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import PeriodFilter from "@/components/PeriodFilter";
 
 interface Tither {
   id?: string;
@@ -67,6 +68,8 @@ export default function Entradas() {
   const [tithers, setTithers] = useState<Tither[]>([
     { nome: "", valor: 0, forma_pagamento: "dinheiro" },
   ]);
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
 
   useEffect(() => {
     fetchMembers();
@@ -86,6 +89,7 @@ export default function Entradas() {
       .order("data_culto", { ascending: false })
       .limit(20);
 
+    console.log( data )
     if (data) setReports(data);
   };
 
@@ -313,6 +317,12 @@ export default function Entradas() {
 
   const formatDate = (date: string) => new Date(date).toLocaleDateString("pt-BR");
 
+  const filterReport = (report: Report) => {
+    if (dataInicio && report.data_culto <= dataInicio) return false;
+    if (dataFim && report.data_culto >= dataFim) return false;
+    return true;
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
@@ -476,6 +486,20 @@ export default function Entradas() {
           </Dialog>
         </div>
 
+
+        {/* Period Filter */}
+        <PeriodFilter
+          loading={loading}
+          label="Limpar Filtros"
+          dataInicio={dataInicio}
+          dataFim={dataFim}
+          onChangeInicio={setDataInicio}
+          onChangeFim={setDataFim}
+          onClick={() => {
+            setDataFim('');
+            setDataInicio('');
+          }}
+        />
         {/* Reports List */}
         <Card>
           <CardHeader>
@@ -498,7 +522,7 @@ export default function Entradas() {
                     <TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhum relatório encontrado</TableCell>
                   </TableRow>
                 ) : (
-                  reports.map((report) => (
+                  reports.filter(filterReport).map((report) => (
                     <TableRow key={report.id}>
                       <TableCell>{formatDate(report.data_culto)}</TableCell>
                       <TableCell>{report.pastores_presentes || "-"}</TableCell>
