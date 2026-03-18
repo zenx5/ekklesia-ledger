@@ -309,6 +309,7 @@ export default function Auditoria() {
                 </TableBody>
               </Table>
               <TablePagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} pageSize={pageSize} onPageChange={setCurrentPage} />
+              </>
             )}
           </CardContent>
         </Card>
