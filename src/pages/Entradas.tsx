@@ -88,10 +88,8 @@ export default function Entradas() {
       .from("financial_reports")
       .select("id, data_culto, pastores_presentes, preletor, total_arrecadacao, created_at")
       .is("deleted_at", null)
-      .order("data_culto", { ascending: false })
-      .limit(20);
+      .order("data_culto", { ascending: false });
 
-    console.log( data )
     if (data) setReports(data);
   };
 
