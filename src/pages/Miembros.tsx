@@ -428,7 +428,7 @@ const Miembros = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredMembers.length === 0 ? (
+            {paginatedItems.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={isAdmin ? 6 : 5}
@@ -440,7 +440,7 @@ const Miembros = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredMembers.map((member) => (
+              paginatedItems.map((member) => (
                 <TableRow key={member.id}>
                   <TableCell className="font-medium">{member.nome}</TableCell>
                   <TableCell className="hidden sm:table-cell">
@@ -479,11 +479,7 @@ const Miembros = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => {
-                            if (
-                              confirm(
-                                "Tem certeza de que deseja remover este membro?"
-                              )
-                            ) {
+                            if (confirm("Tem certeza de que deseja remover este membro?")) {
                               deleteMutation.mutate(member.id);
                             }
                           }}
@@ -498,6 +494,7 @@ const Miembros = () => {
             )}
           </TableBody>
         </Table>
+        <TablePagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} pageSize={pageSize} onPageChange={setCurrentPage} />
       </div>
     </div>
   </AppLayout>

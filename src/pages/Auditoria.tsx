@@ -283,14 +283,14 @@ export default function Auditoria() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredLogs.length === 0 ? (
+                  {paginatedItems.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                         Nenhum registro encontrado
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredLogs.map((log) => (
+                    paginatedItems.map((log) => (
                       <TableRow key={log.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetails(log)}>
                         <TableCell className="text-sm">{formatDate(log.created_at)}</TableCell>
                         <TableCell>{log.profiles?.nome || "Desconhecido"}</TableCell>
@@ -307,6 +307,7 @@ export default function Auditoria() {
                   )}
                 </TableBody>
               </Table>
+              <TablePagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} pageSize={pageSize} onPageChange={setCurrentPage} />
             )}
           </CardContent>
         </Card>

@@ -336,7 +336,7 @@ export default function Usuarios() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    users.map((user) => {
+                    paginatedItems.map((user) => {
                       const role = user.user_roles?.[0]?.role || "operador";
                       const isCurrentUser = user.user_id === currentUser?.id;
 
@@ -355,7 +355,7 @@ export default function Usuarios() {
                               </SelectTrigger>
                               <SelectContent>
                                 { roles.map( role => (
-                                  <SelectItem value={role.name} className="capitalize">
+                                  <SelectItem key={role.id} value={role.name} className="capitalize">
                                       { role.name }
                                   </SelectItem>
                                 ))}
@@ -381,6 +381,7 @@ export default function Usuarios() {
                   )}
                 </TableBody>
               </Table>
+              <TablePagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} pageSize={pageSize} onPageChange={setCurrentPage} />
             )}
           </CardContent>
         </Card>
