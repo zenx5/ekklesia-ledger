@@ -383,6 +383,7 @@ export default function Usuarios() {
                 </TableBody>
               </Table>
               <TablePagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} pageSize={pageSize} onPageChange={setCurrentPage} />
+              </>
             )}
           </CardContent>
         </Card>
