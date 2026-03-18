@@ -198,6 +198,8 @@ const Miembros = () => {
       member.telefone?.includes(searchTerm)
   );
 
+  const { currentPage, totalPages, paginatedItems, setCurrentPage, totalItems, pageSize } = usePagination(filteredMembers);
+
   const activeCount = members.filter((m) => m.status === "ativo").length;
   const inactiveCount = members.filter((m) => m.status === "inativo").length;
 
