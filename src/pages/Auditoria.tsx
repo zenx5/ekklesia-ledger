@@ -200,6 +200,8 @@ export default function Auditoria() {
     return matchesSearch && matchesAction && matchesTable;
   });
 
+  const { currentPage, totalPages, paginatedItems, setCurrentPage, totalItems, pageSize } = usePagination(filteredLogs, { pageSize: 15 });
+
   if (authLoading) {
     return (
       <AppLayout>
