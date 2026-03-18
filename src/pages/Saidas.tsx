@@ -79,11 +79,12 @@ export default function Saidas() {
       .from("expenses")
       .select("*")
       .is("deleted_at", null)
-      .order("data_saida", { ascending: false })
-      .limit(20);
+      .order("data_saida", { ascending: false });
 
     if (data) setExpenses(data as Expense[]);
   };
+
+  const { currentPage, totalPages, paginatedItems, setCurrentPage, totalItems, pageSize } = usePagination(expenses);
 
   const handleDelete = async (id: string) => {
     try {
