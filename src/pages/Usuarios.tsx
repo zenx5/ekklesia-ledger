@@ -209,6 +209,8 @@ export default function Usuarios() {
     );
   }
 
+  const { currentPage, totalPages, paginatedItems, setCurrentPage, totalItems, pageSize } = usePagination(users);
+
   if (!isAdmin) return null;
 
   return (
