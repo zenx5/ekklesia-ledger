@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { usePagination } from "@/hooks/use-pagination";
+import TablePagination from "@/components/TablePagination";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -77,11 +79,12 @@ export default function Saidas() {
       .from("expenses")
       .select("*")
       .is("deleted_at", null)
-      .order("data_saida", { ascending: false })
-      .limit(20);
+      .order("data_saida", { ascending: false });
 
     if (data) setExpenses(data as Expense[]);
   };
+
+  const { currentPage, totalPages, paginatedItems, setCurrentPage, totalItems, pageSize } = usePagination(expenses);
 
   const handleDelete = async (id: string) => {
     try {
@@ -283,12 +286,12 @@ export default function Saidas() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {expenses.length === 0 ? (
+                {paginatedItems.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhuma saída encontrada</TableCell>
                   </TableRow>
                 ) : (
-                  expenses.map((expense) => (
+                  paginatedItems.map((expense) => (
                     <TableRow key={expense.id}>
                       <TableCell>{formatDate(expense.data_saida)}</TableCell>
                       <TableCell>{expense.descricao}</TableCell>
@@ -327,6 +330,7 @@ export default function Saidas() {
                 )}
               </TableBody>
             </Table>
+            <TablePagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} pageSize={pageSize} onPageChange={setCurrentPage} />
           </CardContent>
         </Card>
       </div>

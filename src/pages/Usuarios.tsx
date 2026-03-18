@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { usePagination } from "@/hooks/use-pagination";
+import TablePagination from "@/components/TablePagination";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -207,6 +209,8 @@ export default function Usuarios() {
     );
   }
 
+  const { currentPage, totalPages, paginatedItems, setCurrentPage, totalItems, pageSize } = usePagination(users);
+
   if (!isAdmin) return null;
 
   return (
@@ -313,6 +317,7 @@ export default function Usuarios() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : (
+              <>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -332,7 +337,7 @@ export default function Usuarios() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    users.map((user) => {
+                    paginatedItems.map((user) => {
                       const role = user.user_roles?.[0]?.role || "operador";
                       const isCurrentUser = user.user_id === currentUser?.id;
 
@@ -351,7 +356,7 @@ export default function Usuarios() {
                               </SelectTrigger>
                               <SelectContent>
                                 { roles.map( role => (
-                                  <SelectItem value={role.name} className="capitalize">
+                                  <SelectItem key={role.id} value={role.name} className="capitalize">
                                       { role.name }
                                   </SelectItem>
                                 ))}
@@ -377,6 +382,8 @@ export default function Usuarios() {
                   )}
                 </TableBody>
               </Table>
+              <TablePagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} pageSize={pageSize} onPageChange={setCurrentPage} />
+              </>
             )}
           </CardContent>
         </Card>

@@ -101,6 +101,7 @@ export default function Relatorios() {
 
         {/* Period Filter */}
         <PeriodFilter
+          label="Gerar Relatório"
           loading={loading}
           dataInicio={dataInicio}
           dataFim={dataFim}
