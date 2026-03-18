@@ -501,67 +501,14 @@ export default function Entradas() {
           }}
         />
         {/* Reports List */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Relatórios Recentes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Pastores</TableHead>
-                  <TableHead>Preletor</TableHead>
-                  <TableHead className="text-right">Total Arrecadado</TableHead>
-                  <TableHead className="w-[80px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reports.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhum relatório encontrado</TableCell>
-                  </TableRow>
-                ) : (
-                  reports.filter(filterReport).map((report) => (
-                    <TableRow key={report.id}>
-                      <TableCell>{formatDate(report.data_culto)}</TableCell>
-                      <TableCell>{report.pastores_presentes || "-"}</TableCell>
-                      <TableCell>{report.preletor || "-"}</TableCell>
-                      <TableCell className="text-right font-medium">{formatCurrency(Number(report.total_arrecadacao))}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handlePrintEntrada(report.id)} title="Imprimir PDF">
-                            <Printer className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openEdit(report)}>
-                             <Pencil className="h-4 w-4" /> 
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>¿Eliminar relatório?</AlertDialogTitle>
-                                <AlertDialogDescription>Esta acción ocultará el registro y sus dizimistas de la lista. Los datos se conservarán para auditoría.</AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(report.id)}>Eliminar</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <ReportsTable
+          reports={reports.filter(filterReport)}
+          formatDate={formatDate}
+          formatCurrency={formatCurrency}
+          handlePrintEntrada={handlePrintEntrada}
+          openEdit={openEdit}
+          handleDelete={handleDelete}
+        />
       </div>
     </AppLayout>
   );
