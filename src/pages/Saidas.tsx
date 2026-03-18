@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Save, Loader2, Trash2, Pencil, Printer } from "lucide-react";
 import { generateSaidaPDF } from "@/lib/pdf-reports";
+import CategorySelector from "@/components/CategorySelector";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -38,18 +39,6 @@ interface Expense {
   observacoes: string;
   created_at: string;
 }
-
-const CATEGORIES = [
-  "Manutenção",
-  "Limpeza",
-  "Água/Luz",
-  "Material de escritório",
-  "Eventos",
-  "Ajuda social",
-  "Transporte",
-  "Alimentação",
-  "Outros",
-];
 
 const defaultForm = {
   data_saida: new Date().toISOString().split("T")[0],
@@ -225,13 +214,12 @@ export default function Saidas() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="categoria">Categoria</Label>
-                    <Select value={formData.categoria} onValueChange={(value) => setFormData({ ...formData, categoria: value })}>
-                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                      <SelectContent>
-                        {CATEGORIES.map((cat) => (<SelectItem key={cat} value={cat}>{cat}</SelectItem>))}
-                      </SelectContent>
-                    </Select>
+                    <CategorySelector
+                      value={formData.categoria}
+                      onValueChange={(value) => setFormData({ ...formData, categoria: value })}
+                      otherValue={formData.categoria}
+                      onOtherValueChange={(value) => setFormData({ ...formData, categoria: value })}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="pagamento">Forma de Pagamento</Label>
