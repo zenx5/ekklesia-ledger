@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import PeriodFilter from "@/components/PeriodFilter";
 
 interface Expense {
   id: string;
@@ -58,6 +59,8 @@ export default function Saidas() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState(defaultForm);
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
 
   useEffect(() => {
     fetchExpenses();
@@ -73,7 +76,13 @@ export default function Saidas() {
     if (data) setExpenses(data as Expense[]);
   };
 
-  const { currentPage, totalPages, paginatedItems, setCurrentPage, totalItems, pageSize } = usePagination(expenses);
+  const filterReport = (report: Expense) => {
+    if (dataInicio && report.data_saida <= dataInicio) return false;
+    if (dataFim && report.data_saida >= dataFim) return false;
+    return true;
+  };
+
+  const { currentPage, totalPages, paginatedItems, setCurrentPage, totalItems, pageSize } = usePagination(expenses.filter(filterReport));
 
   const handleDelete = async (id: string) => {
     try {
@@ -257,6 +266,20 @@ export default function Saidas() {
           </Dialog>
         </div>
 
+        {/* Period Filter */}
+        <PeriodFilter
+          loading={loading}
+          label="Limpar Filtros"
+          dataInicio={dataInicio}
+          dataFim={dataFim}
+          onChangeInicio={setDataInicio}
+          onChangeFim={setDataFim}
+          onClick={() => {
+            setDataFim('');
+            setDataInicio('');
+          }}
+        />
+
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Saídas Recentes</CardTitle>
@@ -279,7 +302,7 @@ export default function Saidas() {
                     <TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhuma saída encontrada</TableCell>
                   </TableRow>
                 ) : (
-                  paginatedItems.map((expense) => (
+                  paginatedItems.filter(filterReport).map((expense) => (
                     <TableRow key={expense.id}>
                       <TableCell>{formatDate(expense.data_saida)}</TableCell>
                       <TableCell>{expense.descricao}</TableCell>

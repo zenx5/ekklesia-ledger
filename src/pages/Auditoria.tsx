@@ -76,7 +76,7 @@ export default function Auditoria() {
         .from("profiles")
         .select("user_id, nome")
         .in("user_id", userIds);
-
+        
       const profilesMap = new Map(profilesData?.map((p) => [p.user_id, p]) || []);
       const logsWithProfiles = filtered.map((log) => ({
         ...log,
@@ -88,7 +88,7 @@ export default function Auditoria() {
   };
 
   const formatDate = (date: string) => {
-    return new Date(date + 'T12:00:00').toLocaleDateString('pt-BR');
+    return new Date(date).toLocaleString('pt-BR');
   };
 
   const getActionBadge = (action: string) => {
@@ -101,7 +101,6 @@ export default function Auditoria() {
   };
 
   const printPdf = () => {
-    console.log( selectedLog )
     window.print();
   }
 

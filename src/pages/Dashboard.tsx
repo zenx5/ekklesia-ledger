@@ -27,33 +27,26 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       // Fetch total entradas (current month)
-      const currentMonth = new Date();
-      const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-      const lastDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
-
       const { data: entradasData } = await supabase
         .from("financial_reports")
-        .select("total_arrecadacao")
-        .gte("data_culto", firstDayOfMonth.toISOString().split("T")[0])
-        .lte("data_culto", lastDayOfMonth.toISOString().split("T")[0]);
-
+        .select("total_arrecadacao,deleted_at")
+        .is("deleted_at", null)
       const entradasTotal = entradasData?.reduce((sum, r) => sum + Number(r.total_arrecadacao || 0), 0) || 0;
       setTotalEntradas(entradasTotal);
 
       // Fetch total saidas (current month)
       const { data: saidasData } = await supabase
         .from("expenses")
-        .select("valor")
-        .gte("data_saida", firstDayOfMonth.toISOString().split("T")[0])
-        .lte("data_saida", lastDayOfMonth.toISOString().split("T")[0]);
-
+        .select("valor,deleted_at")
+        .is("deleted_at", null)
       const saidasTotal = saidasData?.reduce((sum, e) => sum + Number(e.valor || 0), 0) || 0;
       setTotalSaidas(saidasTotal);
 
       // Fetch recent reports count
       const { count } = await supabase
         .from("financial_reports")
-        .select("*", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true })
+        .is("deleted_at", null);
       setRecentReports(count || 0);
 
       // Fetch last 6 months data for chart
