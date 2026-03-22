@@ -146,7 +146,7 @@ export function generateEntradaPDF(data: EntradaReportData) {
     doc.text('PASTOR', 165, finalY + 5, { align: 'center' });
 
     // Descarga del archivo
-    doc.save('Relatorio_Financeiro.pdf');
+    doc.save('relatorio-entrada-' + formatDate(data.data_culto) + '.pdf');
 }
 
 interface SaidaReportData {
@@ -232,7 +232,7 @@ export function generateSaidaPDF(expense: SaidaReportData) {
     doc.text('PASTOR', 165, finalY + 5, { align: 'center' });
 
     // Descarga del archivo
-    doc.save('Relatorio_Financeiro.pdf');
+    doc.save('relatorio-saida-' + formatDate(expense.data_saida) + '.pdf');
 }
 
 function calculateDay(date: string) {
