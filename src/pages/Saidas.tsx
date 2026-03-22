@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Save, Loader2, Trash2, Pencil, Printer } from "lucide-react";
-import { generateEntradaPDF } from "@/lib/pdf-reports";
+import { generateSaidaPDF } from "@/lib/pdf-reports";
 import CategorySelector from "@/components/CategorySelector";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
@@ -311,7 +311,7 @@ export default function Saidas() {
                       <TableCell className="text-right font-medium text-destructive">{formatCurrency(Number(expense.valor))}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => generateEntradaPDF(expense)} title="Imprimir PDF">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => generateSaidaPDF(expense)} title="Imprimir PDF">
                             <Printer className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openEdit(expense)}>

@@ -36,48 +36,52 @@ function generateTable(doc, body = []){
     });
 }
 
-export function generateEntradaPDF(data: EntradaReportData) {
-    const doc = new jsPDF();
-
-    // 1. Encabezado (Logo y Título)
-    autoTable(doc, {
+function generateHeaderTable(doc, title: string){
+  autoTable(doc, {
       startY: 15,
       theme: 'plain',
       styles: { textColor: [0, 0, 0], fontSize: 12, fontStyle: 'bold' },
       body: [
-        ['[LOGO EKKLESIA]', 'RELATÓRIO FINANCEIRO - ENTRADAS']
+        ['[LOGO EKKLESIA]', title]
       ],
       columnStyles: {
         0: { cellWidth: 50 },
         1: { halign: 'center', fontSize: 14 }
       }
     });
+}
+
+export function generateEntradaPDF(data: EntradaReportData) {
+    const doc = new jsPDF();
+
+    // 1. Encabezado (Logo y Título)
+    generateHeaderTable(doc, 'RELATÓRIO FINANCEIRO - ENTRADAS')
 
     // 2. Información del Evento
     generateTable(doc, [
         [
-          { content: 'DAT.: 14/12/2025', colSpan: 2 },
-          { content: 'DOMINGO', colSpan: 2 }
+          { content: 'DAT.: ' + formatDate(data.data_culto), colSpan: 2 },
+          { content: calculateDay(data.data_culto), colSpan: 2 }
         ],
-        [{ content: 'PASTORES PRESENTES: FABIO LUIS COUTINHO', colSpan: 4 }],
-        [{ content: 'DIACONOS EM SERVIÇO: ROSELI / ODAIR', colSpan: 4 }],
-        [{ content: 'PRELETOR: FABIO LUIS COUTINHO', colSpan: 4 }]
+        [{ content: 'PASTORES PRESENTES: ' + (data.pastores_presentes || ''), colSpan: 4 }],
+        [{ content: 'DIACONOS EM SERVIÇO: ' + (data.diaconos_servico || ''), colSpan: 4 }],
+        [{ content: 'PRELETOR: ' + (data.preletor || ''), colSpan: 4 }]
       ]
     );
 
     generateTable(doc, [
         [
-          { content: 'PRESENTES: 75', colSpan: 2 },
-          { content: 'VISITANTES:', colSpan: 2 }
+          { content: 'PRESENTES: ' + (data.quantidade_presentes || ''), colSpan: 2 },
+          { content: 'VISITANTES:' + (data.quantidade_visitantes || ''), colSpan: 2 }
         ],
-        [{ content: 'BATIZADOS / RECEBIDOS:', colSpan: 4 }]
+        [{ content: 'BATIZADOS / RECEBIDOS:' + (data.quantidade_batizados || ''), colSpan: 4 }]
       ]
     );
 
     generateTable(doc, [
         [
           { content: 'OFERTAS GERAIS', colSpan: 3, styles: { fontStyle: 'bold' } },
-          { content: 'R$ 143,00', styles: { fontStyle: 'bold' } }
+          { content: formatCurrency(data.ofertas_gerais || 0), styles: { fontStyle: 'bold' } }
         ]
       ]
     );
@@ -93,13 +97,8 @@ export function generateEntradaPDF(data: EntradaReportData) {
         ['VALOR', 'NOME', 'FORMA DE PAGAMENTO']
       ],
       body: [
-        ['R$ 10,00', 'RODRIGO VALENÇA', 'PIX'],
-        ['R$ 300,00', 'FLAVIA APARECIDA', 'PIX'],
-        ['R$ 430,00', 'JUNIOR CARVALHO', 'PIX'],
-        ['150,00', 'EDUARDA MACHADO', 'PIX'],
-        ['250,00', 'DAIANE PEDRA', 'PIX'],
-        [' ', ' ', ' '], // Espacios vacíos como en tu HTML
-        [' ', ' ', ' ']
+        ...data.tithers.map(t => [ formatCurrency(t.valor), t.nome, getPaymentLabel(t.forma_pagamento) ]),
+        ['', '', '']
       ],
       columnStyles: {
         0: { cellWidth: 35 },
@@ -107,6 +106,8 @@ export function generateEntradaPDF(data: EntradaReportData) {
       }
     });
 
+    const total_dizimos = data.tithers.reduce((sum, t) => sum + t.valor, 0);
+    const total_arrecadado = total_dizimos + (data.ofertas_gerais || 0);
     // 4. Totales Finales
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY,
@@ -115,11 +116,11 @@ export function generateEntradaPDF(data: EntradaReportData) {
       body: [
         [
           { content: 'TOTAL DIZIMOS', colSpan: 2, styles: { fillColor: [249, 249, 249] } },
-          { content: 'R$ 1.140,00', styles: { fillColor: [249, 249, 249] } }
+          { content: formatCurrency(total_dizimos || 0), styles: { fillColor: [249, 249, 249] } }
         ],
         [
           { content: 'TOTAL ARRECADADO', colSpan: 2, styles: { fillColor: [221, 221, 221] } },
-          { content: 'R$ 1.283,00', styles: { fillColor: [221, 221, 221] } }
+          { content: formatCurrency(total_arrecadado || 0), styles: { fillColor: [221, 221, 221] } }
         ]
       ],
       columnStyles: {
@@ -156,53 +157,83 @@ interface SaidaReportData {
 }
 
 export function generateSaidaPDF(expense: SaidaReportData) {
-  const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
+    const doc = new jsPDF();
 
-  // Header
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text("Comprovante de Saída", pageWidth / 2, 20, { align: "center" });
+    // 1. Encabezado (Logo y Título)
+    generateHeaderTable(doc, 'RELATÓRIO FINANCEIRO - SAÍDAS')
 
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Data: ${formatDate(expense.data_saida)}`, pageWidth / 2, 28, { align: "center" });
+    // 2. Información del Evento
+    generateTable(doc, [
+        [
+          { content: 'DATA: ' + expense.data_saida, colSpan: 2 },
+          { content: calculateDay(expense.data_saida), colSpan: 2 }
+        ],
+        [
+          { content: 'RESPONSÁVEL', colSpan: 2 },
+          { content: expense.responsavel || 'NÃO INFORMADO', colSpan: 2 }
+        ]
+      ]
+    );
 
-  let y = 40;
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 5,
+      theme: 'grid',
+      styles: { lineColor: [0, 0, 0], lineWidth: 0.1, textColor: [0, 0, 0], fontSize: 9, minCellHeight: 4 },
+      headStyles: { fillColor: [242, 242, 242], textColor: [0, 0, 0], halign: 'center' },
+      head: [
+        [{ content: 'DESCRIÇÃo', colSpan: 3 }],
+      ],
+      body: [
+        [{ content: expense.descricao || 'NÃO INFORMADO', colSpan: 3 }]
+      ]
+    });
 
-  autoTable(doc, {
-    startY: y,
-    body: [
-      ["Descrição", expense.descricao],
-      ["Categoria", expense.categoria || "-"],
-      ["Responsável", expense.responsavel || "-"],
-      ["Forma de Pagamento", getPaymentLabel(expense.forma_pagamento)],
-      ["Valor", formatCurrency(expense.valor)],
-    ],
-    theme: "grid",
-    styles: { fontSize: 10, cellPadding: 4 },
-    columnStyles: { 0: { fontStyle: "bold", cellWidth: 55 }, 1: { halign: "left" } },
-    margin: { left: 14, right: 14 },
-  });
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 5,
+      theme: 'grid',
+      styles: { lineColor: [0, 0, 0], lineWidth: 0.1, textColor: [0, 0, 0], fontSize: 9, halign: 'center' },
+      headStyles: { fillColor: [242, 242, 242], textColor: [0, 0, 0], halign: 'center' },
+      head: [
+        ['VALOR', 'CATEGORIA', 'FORMA DE PAGAMENTO']
+      ],
+      body: [
+        [ formatCurrency(expense.valor), expense.categoria, getPaymentLabel(expense.forma_pagamento) ]
+      ]
+    });
 
-  y = (doc as any).lastAutoTable.finalY + 10;
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 5,
+      theme: 'grid',
+      styles: { lineColor: [0, 0, 0], lineWidth: 0.1, textColor: [0, 0, 0], fontSize: 9, minCellHeight: 4 },
+      headStyles: { fillColor: [242, 242, 242], textColor: [0, 0, 0], halign: 'center' },
+      head: [
+        [{ content: 'OBSERVAÇÕES', colSpan: 3 }],
+      ],
+      body: [
+        [{ content: expense.observacoes || 'NÃO INFORMADO', colSpan: 3 }]
+      ]
+    });
 
-  if (expense.observacoes) {
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("Observações", 14, y);
-    y += 6;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    const lines = doc.splitTextToSize(expense.observacoes, pageWidth - 28);
-    doc.text(lines, 14, y);
-  }
+    // 5. Sección de Firmas (Posicionamiento manual)
+    const finalY = (doc as any).lastAutoTable.finalY + 35;
+    doc.setFontSize(8);
+    
+    // Configuración de líneas (x1, y1, x2, y2)
+    doc.line(20, finalY, 70, finalY); 
+    doc.text('SECRETARIA', 45, finalY + 5, { align: 'center' });
 
-  // Footer
-  const pageHeight = doc.internal.pageSize.getHeight();
-  doc.setFontSize(7);
-  doc.setTextColor(150);
-  doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`, pageWidth / 2, pageHeight - 10, { align: "center" });
+    doc.line(80, finalY, 130, finalY);
+    doc.text('TESOUREIRO', 105, finalY + 5, { align: 'center' });
 
-  doc.save(`saida_${expense.data_saida}.pdf`);
+    doc.line(140, finalY, 190, finalY);
+    doc.text('PASTOR', 165, finalY + 5, { align: 'center' });
+
+    // Descarga del archivo
+    doc.save('Relatorio_Financeiro.pdf');
+}
+
+function calculateDay(date: string) {
+  const days = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
+  const d = new Date(date + "T12:00:00");
+  return days[d.getDay()];
 }
