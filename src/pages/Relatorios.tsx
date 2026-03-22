@@ -35,6 +35,12 @@ interface ExpenseEntry {
   forma_pagamento: string;
 }
 
+function lastMonth(date: string) {
+  const fecha = new Date(`${date}T00:00:00`);
+  fecha.setDate(fecha.getDate() - 30);
+  return fecha.toISOString().split('T')[0];
+}
+
 export default function Relatorios() {
   const { toast } = useToast();
   const [dataInicio, setDataInicio] = useState("");
@@ -43,6 +49,7 @@ export default function Relatorios() {
   const [saidas, setSaidas] = useState<ExpenseEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [lastTotalSaidas, setLastTotalSaidas] = useState(0);
 
   const fetchReport = async () => {
     if (!dataInicio || !dataFim) {
@@ -53,8 +60,8 @@ export default function Relatorios() {
     setLoading(true);
     setSearched(true);
 
-    try {
-      const [{ data: entradasData }, { data: saidasData }] = await Promise.all([
+    async function fetchData(dataInicio: string, dataFim: string) {
+      return await Promise.all([
         supabase
           .from("financial_reports")
           .select("id, data_culto, total_arrecadacao, dizimos_total, ofertas_gerais, preletor")
@@ -70,6 +77,16 @@ export default function Relatorios() {
           .lte("data_saida", dataFim)
           .order("data_saida", { ascending: true }),
       ]);
+    }
+
+    try {
+      const [{ data: entradasData }, { data: saidasData }] = await fetchData(dataInicio, dataFim);
+      
+      const [{ data: lastEntradasData }, { data: lastSaidasData }] = await fetchData(lastMonth(dataInicio), lastMonth(dataFim));
+      
+      const lastTotalEntradas = lastEntradasData.reduce((sum, e) => sum + Number(e.total_arrecadacao || 0), 0);
+      const lastTotalSaidas = lastSaidasData.reduce((sum, e) => sum + Number(e.valor || 0), 0);
+      setLastTotalSaidas(lastTotalEntradas - lastTotalSaidas);
 
       setEntradas(entradasData || []);
       setSaidas(saidasData || []);
@@ -252,6 +269,10 @@ export default function Relatorios() {
                       <TableRow>
                         <TableCell className="font-medium">Total de Saídas</TableCell>
                         <TableCell className="text-right text-destructive font-semibold">{formatCurrency(totalSaidas)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Saldo Mes anterior</TableCell>
+                        <TableCell className="text-right font-semibold">{formatCurrency(lastTotalSaidas)}</TableCell>
                       </TableRow>
                       <TableRow className="bg-muted/50">
                         <TableCell className="font-bold text-lg">Saldo Final</TableCell>
