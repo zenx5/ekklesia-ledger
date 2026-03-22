@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import logoEkklesia from "../assets/logo.png";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -37,12 +38,14 @@ function generateTable(doc, body = []){
 }
 
 function generateHeaderTable(doc, title: string){
+  doc.addImage(logoEkklesia, 'PNG', 15, 10, 25, 20);
+
   autoTable(doc, {
       startY: 15,
       theme: 'plain',
       styles: { textColor: [0, 0, 0], fontSize: 12, fontStyle: 'bold' },
       body: [
-        ['[LOGO EKKLESIA]', title]
+        ['', title]
       ],
       columnStyles: {
         0: { cellWidth: 50 },
@@ -143,7 +146,7 @@ export function generateEntradaPDF(data: EntradaReportData) {
     doc.text('PASTOR', 165, finalY + 5, { align: 'center' });
 
     // Descarga del archivo
-    doc.save('Relatorio_Financeiro.pdf');
+    doc.save('relatorio-entrada-' + formatDate(data.data_culto) + '.pdf');
 }
 
 interface SaidaReportData {
@@ -229,7 +232,7 @@ export function generateSaidaPDF(expense: SaidaReportData) {
     doc.text('PASTOR', 165, finalY + 5, { align: 'center' });
 
     // Descarga del archivo
-    doc.save('Relatorio_Financeiro.pdf');
+    doc.save('relatorio-saida-' + formatDate(expense.data_saida) + '.pdf');
 }
 
 function calculateDay(date: string) {
