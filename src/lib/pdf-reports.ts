@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import logoEkklesia from "../assets/logo.png";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -37,12 +38,14 @@ function generateTable(doc, body = []){
 }
 
 function generateHeaderTable(doc, title: string){
+  doc.addImage(logoEkklesia, 'PNG', 15, 10, 25, 20);
+
   autoTable(doc, {
       startY: 15,
       theme: 'plain',
       styles: { textColor: [0, 0, 0], fontSize: 12, fontStyle: 'bold' },
       body: [
-        ['[LOGO EKKLESIA]', title]
+        ['', title]
       ],
       columnStyles: {
         0: { cellWidth: 50 },
