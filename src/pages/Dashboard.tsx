@@ -24,13 +24,31 @@ export default function Dashboard() {
     fetchDashboardData();
   }, []);
 
+  const getMonthRange = (monthsAgo) => {
+    const ahora = new Date();
+    // Fecha de inicio: Primero de mes hace 'n' meses
+    const dataInicio = new Date(ahora.getFullYear(), ahora.getMonth() - monthsAgo, 1);
+    // Formatear a YYYY-MM-DD para Supabase/PostgreSQL
+    const format = (date) => date.toISOString().split('T')[0];
+
+    return {
+      dataInicio: format(dataInicio),
+      dataFim: format(ahora)
+    };
+  };
+
   const fetchDashboardData = async () => {
     try {
+      const { dataInicio, dataFim } = getMonthRange(7)
       // Fetch total entradas (current month)
+      console.log( 'Dashboard', dataInicio, dataFim)
       const { data: entradasData } = await supabase
         .from("financial_reports")
         .select("total_arrecadacao,deleted_at")
         .is("deleted_at", null)
+        .gte("data_culto", dataInicio)
+        .lte("data_culto", dataFim)
+
       const entradasTotal = entradasData?.reduce((sum, r) => sum + Number(r.total_arrecadacao || 0), 0) || 0;
       setTotalEntradas(entradasTotal);
 

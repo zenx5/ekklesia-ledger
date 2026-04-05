@@ -16,6 +16,7 @@ import {
 import { TrendingUp, TrendingDown, DollarSign, FileSearch } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import PeriodFilter from "@/components/PeriodFilter";
+import { generateGeneralPDF } from "@/lib/pdf-reports";
 
 interface ReportEntry {
   id: string;
@@ -64,7 +65,7 @@ export default function Relatorios() {
       return await Promise.all([
         supabase
           .from("financial_reports")
-          .select("id, data_culto, total_arrecadacao, dizimos_total, ofertas_gerais, preletor")
+          .select("id, data_culto, total_arrecadacao, observacoes, dizimos_total, ofertas_gerais, preletor")
           .is("deleted_at", null)
           .gte("data_culto", dataInicio)
           .lte("data_culto", dataFim)
@@ -125,6 +126,21 @@ export default function Relatorios() {
           onChangeInicio={setDataInicio}
           onChangeFim={setDataFim}
           onClick={fetchReport}
+          labelAction="Imprimir"
+          onAction={
+            dataInicio && dataFim && (entradas.length > 0 || saidas.length > 0) ? 
+            () => generateGeneralPDF(dataInicio, dataFim, {
+              entradas,
+              saidas,
+              summary: {
+                entradas: formatCurrency(totalEntradas),
+                saidas: formatCurrency(totalSaidas),
+                past: formatCurrency(lastTotalSaidas),
+                saldo: formatCurrency(saldo)
+              }
+            }) :
+            undefined
+          }
         />
 
         {searched && !loading && (
