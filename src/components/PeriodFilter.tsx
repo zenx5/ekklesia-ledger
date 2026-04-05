@@ -4,7 +4,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FileSearch } from "lucide-react";
 
-export default function PeriodFilter({ label, dataInicio, dataFim, loading, onClick, onChangeInicio, onChangeFim }) {
+interface PeriodFilterProps {
+    label?: string;
+    labelAction?: string;
+    dataInicio: string;
+    dataFim: string;
+    loading?: boolean;
+    onClick?: () => void;
+    onAction?: () => void;
+    onChangeInicio: (value: string) => void;
+    onChangeFim: (value: string) => void;
+}
+
+export default function PeriodFilter({ label, labelAction, dataInicio, dataFim, loading, onClick, onAction, onChangeInicio, onChangeFim }: PeriodFilterProps) {
 
     return (
         <Card>
@@ -20,6 +32,9 @@ export default function PeriodFilter({ label, dataInicio, dataFim, loading, onCl
               </div>
               { onClick && <Button onClick={onClick} disabled={loading} className="w-full sm:w-auto">
                 { label ? label : <><FileSearch className="mr-2" /> { loading ? "Buscando..." : "Gerar Relatório" }</> }
+              </Button>}
+              { onAction && <Button onClick={onAction} className="w-full sm:w-auto">
+                 { labelAction ?? 'Action' }
               </Button>}
             </div>
           </CardContent>

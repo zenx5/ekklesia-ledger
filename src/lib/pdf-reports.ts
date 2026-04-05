@@ -132,18 +132,7 @@ export function generateEntradaPDF(data: EntradaReportData) {
     });
 
     // 5. Sección de Firmas (Posicionamiento manual)
-    const finalY = (doc as any).lastAutoTable.finalY + 35;
-    doc.setFontSize(8);
-    
-    // Configuración de líneas (x1, y1, x2, y2)
-    doc.line(20, finalY, 70, finalY); 
-    doc.text('SECRETARIA', 45, finalY + 5, { align: 'center' });
-
-    doc.line(80, finalY, 130, finalY);
-    doc.text('TESOUREIRO', 105, finalY + 5, { align: 'center' });
-
-    doc.line(140, finalY, 190, finalY);
-    doc.text('PASTOR', 165, finalY + 5, { align: 'center' });
+    signDocument(doc);
 
     // Descarga del archivo
     doc.save('relatorio-entrada-' + formatDate(data.data_culto) + '.pdf');
@@ -218,21 +207,125 @@ export function generateSaidaPDF(expense: SaidaReportData) {
     });
 
     // 5. Sección de Firmas (Posicionamiento manual)
-    const finalY = (doc as any).lastAutoTable.finalY + 35;
-    doc.setFontSize(8);
-    
-    // Configuración de líneas (x1, y1, x2, y2)
-    doc.line(20, finalY, 70, finalY); 
-    doc.text('SECRETARIA', 45, finalY + 5, { align: 'center' });
-
-    doc.line(80, finalY, 130, finalY);
-    doc.text('TESOUREIRO', 105, finalY + 5, { align: 'center' });
-
-    doc.line(140, finalY, 190, finalY);
-    doc.text('PASTOR', 165, finalY + 5, { align: 'center' });
+    signDocument(doc);
 
     // Descarga del archivo
     doc.save('relatorio-saida-' + formatDate(expense.data_saida) + '.pdf');
+}
+
+export function generateGeneralPDF(dataInicio: string, dataFim: string, data: { entradas: EntradaReportData[]; saidas: SaidaReportData[], summary?: { entradas: string; saidas: string; past: string; saldo: string } }) {
+    const doc = new jsPDF();
+
+    const items = [
+      ...data.entradas.map(e => ({ ...e, type: 'entrada' })),
+      ...data.saidas.map(s => ({ ...s, type: 'saida' }))
+    ]
+
+    // 1. Encabezado (Logo y Título)
+    generateHeaderTable(doc, 'RELATÓRIO FINANCEIRO - GERAL')
+
+    // 2. Información del Evento
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 5,
+      theme: 'grid',
+      styles: { lineColor: [0, 0, 0], lineWidth: 0, textColor: [0, 0, 0], fontSize: 9 },
+      body: [
+        [
+          { content: 'LIVRO CAIXA', colSpan: 2 },
+          { content: 'Período: 06/2025', colSpan: 2 }
+        ],
+        [
+          { content: 'IGREJA DO EKKLESIA', colSpan: 2 },
+          { content: 'CNPJ: 00.000.000/0000-00', colSpan: 2 }
+        ],
+        [
+          { content: '[ENDEREÇO]', colSpan: 2 },
+          { content: '[REGIÃO]', colSpan: 2 }
+        ]
+      ]
+    });
+
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 5,
+      theme: 'grid',
+      styles: { lineColor: [0, 0, 0], lineWidth: 0, textColor: [0, 0, 0], fontSize: 9, halign: 'right' },
+      headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], halign: 'right' },
+      head: [
+        ['HISTOICO', 'ENTRADA', 'SAIDA'].map( h => ({ content: h, styles: { halign: h=='HISTOICO' ? 'left' : 'right', fontStyle: 'bold', borderWidth: 0.1  } }) )
+      ],
+      body: [
+        ...items.map((item: { type: string } & (EntradaReportData | SaidaReportData)) => [
+          {
+            content: item.type === 'entrada' ? 'Culto do ' + formatDate((item as EntradaReportData).data_culto) : item.descricao || '',
+            styles: { halign: 'left' }
+          },
+          item.type === 'entrada' ? formatCurrency((item as EntradaReportData).total_arrecadacao || 0) : '',
+          item.type === 'saida' ? formatCurrency((item as SaidaReportData).valor || 0) : ''
+        ])
+      ]
+    });
+
+    const yline = (doc as any).lastAutoTable.finalY + 10
+
+    doc.line(20, yline, 190, yline); 
+
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 15,
+      theme: 'grid',
+      styles: { lineColor: [0, 0, 0], lineWidth: 0, textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 10 },
+      body: [
+        [
+          { content: 'TOTAL ENTRADAS', styles: { halign: 'right' }, colSpan: 2 },
+          { content: data.summary?.entradas || '', styles: { halign: 'left' }, colSpan: 1 }
+        ],
+        [
+          { content: 'TOTAL SAÍDAS', styles: { halign: 'right' }, colSpan: 2 },
+          { content: data.summary?.saidas || '', styles: { halign: 'left' }, colSpan: 1 }
+        ],
+        [
+          { content: 'SAÍDAS PASSADAS', styles: { halign: 'right' }, colSpan: 2 },
+          { content: data.summary?.past || '', styles: { halign: 'left' }, colSpan: 1 }
+        ],
+        [
+          { content: 'SALDO', styles: { halign: 'right' }, colSpan: 2 },
+          { content: data.summary?.saldo || '', styles: { halign: 'left' }, colSpan: 1 }
+        ]
+      ],
+      columnStyles: {
+        0: {  }, // Mismo ancho que la columna 'VALOR' superior
+        1: { cellWidth: 35 }
+      }
+    })
+    
+    // 5. Sección de Firmas (Posicionamiento manual)
+    signDocument(doc);
+
+    // Descarga del archivo
+    doc.save('relatorio-saida-' + formatDate(dataInicio) + '-' + formatDate(dataFim) + '.pdf');
+}
+
+function signDocument(doc:any){
+  let finalY = (doc as any).lastAutoTable.finalY + 50;
+  doc.setFontSize(8);
+
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const spaceNeededForSignatures = 25; // Espacio necesario para las firmas
+    
+  // Si no hay espacio en la página actual, agregar una nueva página
+  if (finalY + spaceNeededForSignatures > pageHeight - 10) {
+    doc.addPage();
+    finalY = 50; // Posicionar al inicio de la nueva página
+  }
+  
+  // Configuración de líneas (x1, y1, x2, y2)
+  doc.line(20, finalY, 70, finalY); 
+  doc.text('SECRETARIA', 45, finalY + 5, { align: 'center' });
+
+  doc.line(80, finalY, 130, finalY);
+  doc.text('TESOUREIRO', 105, finalY + 5, { align: 'center' });
+
+  doc.line(140, finalY, 190, finalY);
+  doc.text('PASTOR', 165, finalY + 5, { align: 'center' });
 }
 
 function calculateDay(date: string) {
