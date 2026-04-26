@@ -5,6 +5,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign, Users } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import PeriodSelector from "@/components/PeriodSelector";
 
 interface MonthlyData {
   month: string;
@@ -19,10 +20,11 @@ export default function Dashboard() {
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
   const [recentReports, setRecentReports] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState(0); // defual 1 month (current)
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [period]);
 
   const getMonthRange = (monthsAgo) => {
     const ahora = new Date();
@@ -39,7 +41,7 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const { dataInicio, dataFim } = getMonthRange(7)
+      const { dataInicio, dataFim } = getMonthRange(period);
       // Fetch total entradas (current month)
       console.log( 'Dashboard', dataInicio, dataFim)
       const { data: entradasData } = await supabase
@@ -55,16 +57,21 @@ export default function Dashboard() {
       // Fetch total saidas (current month)
       const { data: saidasData } = await supabase
         .from("expenses")
-        .select("valor,deleted_at")
+        .select("*")
         .is("deleted_at", null)
-      const saidasTotal = saidasData?.reduce((sum, e) => sum + Number(e.valor || 0), 0) || 0;
+        .gte("data_saida", dataInicio)
+        .lte("data_saida", dataFim)
+      console.log( saidasData )
+        const saidasTotal = saidasData?.reduce((sum, e) => sum + Number(e.valor || 0), 0) || 0;
       setTotalSaidas(saidasTotal);
 
       // Fetch recent reports count
       const { count } = await supabase
         .from("financial_reports")
         .select("*", { count: "exact", head: true })
-        .is("deleted_at", null);
+        .is("deleted_at", null)
+        .gte("data_culto", dataInicio)
+        .lte("data_culto", dataFim);
       setRecentReports(count || 0);
 
       // Fetch last 6 months data for chart
@@ -134,7 +141,7 @@ export default function Dashboard() {
               <div className="text-2xl font-bold text-success">
                 {loading ? "..." : formatCurrency(totalEntradas)}
               </div>
-              <p className="text-xs text-muted-foreground">Este mês</p>
+              <PeriodSelector period={period} onChange={setPeriod} />
             </CardContent>
           </Card>
 
@@ -149,7 +156,7 @@ export default function Dashboard() {
               <div className="text-2xl font-bold text-destructive">
                 {loading ? "..." : formatCurrency(totalSaidas)}
               </div>
-              <p className="text-xs text-muted-foreground">Este mês</p>
+              <PeriodSelector period={period} onChange={setPeriod} />
             </CardContent>
           </Card>
 
@@ -164,7 +171,7 @@ export default function Dashboard() {
               <div className={`text-2xl font-bold ${saldo >= 0 ? "text-success" : "text-destructive"}`}>
                 {loading ? "..." : formatCurrency(saldo)}
               </div>
-              <p className="text-xs text-muted-foreground">Este mês</p>
+              <PeriodSelector period={period} onChange={setPeriod} />
             </CardContent>
           </Card>
 
