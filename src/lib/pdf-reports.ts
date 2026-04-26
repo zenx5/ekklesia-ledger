@@ -213,15 +213,12 @@ export function generateSaidaPDF(expense: SaidaReportData) {
     doc.save('relatorio-saida-' + formatDate(expense.data_saida) + '.pdf');
 }
 
-type GeneralEntrada = Partial<EntradaReportData> & { data_culto: string; total_arrecadacao?: number | null };
-type GeneralSaida = Partial<SaidaReportData> & { data_saida: string; descricao?: string; valor?: number | null };
-
-export function generateGeneralPDF(dataInicio: string, dataFim: string, data: { entradas: GeneralEntrada[]; saidas: GeneralSaida[], summary?: { entradas: string; saidas: string; past: string; saldo: string } }) {
+export function generateGeneralPDF(dataInicio: string, dataFim: string, data: { entradas: EntradaReportData[]; saidas: SaidaReportData[], summary?: { entradas: string; saidas: string; past: string; saldo: string } }) {
     const doc = new jsPDF();
 
-    const items: Array<{ type: 'entrada' | 'saida' } & GeneralEntrada & GeneralSaida> = [
-      ...data.entradas.map(e => ({ ...(e as GeneralEntrada & GeneralSaida), type: 'entrada' as const })),
-      ...data.saidas.map(s => ({ ...(s as GeneralEntrada & GeneralSaida), type: 'saida' as const }))
+    const items = [
+      ...data.entradas.map(e => ({ ...e, type: 'entrada' })),
+      ...data.saidas.map(s => ({ ...s, type: 'saida' }))
     ]
 
     // 1. Encabezado (Logo y Título)
@@ -254,16 +251,16 @@ export function generateGeneralPDF(dataInicio: string, dataFim: string, data: { 
       styles: { lineColor: [0, 0, 0], lineWidth: 0, textColor: [0, 0, 0], fontSize: 9, halign: 'right' },
       headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], halign: 'right' },
       head: [
-        ['HISTOICO', 'ENTRADA', 'SAIDA'].map( h => ({ content: h, styles: { halign: (h=='HISTOICO' ? 'left' : 'right') as 'left' | 'right', fontStyle: 'bold' as const, borderWidth: 0.1  } }) )
+        ['HISTOICO', 'ENTRADA', 'SAIDA'].map( h => ({ content: h, styles: { halign: h=='HISTOICO' ? 'left' : 'right', fontStyle: 'bold', borderWidth: 0.1  } }) )
       ],
       body: [
-        ...items.map((item) => [
+        ...items.map((item: { type: string } & (EntradaReportData | SaidaReportData)) => [
           {
-            content: item.type === 'entrada' ? 'Culto do ' + formatDate(item.data_culto as string) : (item.descricao || ''),
-            styles: { halign: 'left' as 'left' }
+            content: item.type === 'entrada' ? 'Culto do ' + formatDate((item as EntradaReportData).data_culto) : item.descricao || '',
+            styles: { halign: 'left' }
           },
-          item.type === 'entrada' ? formatCurrency(Number(item.total_arrecadacao) || 0) : '',
-          item.type === 'saida' ? formatCurrency(Number(item.valor) || 0) : ''
+          item.type === 'entrada' ? formatCurrency((item as EntradaReportData).total_arrecadacao || 0) : '',
+          item.type === 'saida' ? formatCurrency((item as SaidaReportData).valor || 0) : ''
         ])
       ]
     });
