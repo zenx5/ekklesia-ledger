@@ -62,17 +62,12 @@ export default function Usuarios() {
   });
 
   useEffect(() => {
-    if (!authLoading && !isAdmin) {
-      navigate("/dashboard");
-    }
-  }, [isAdmin, authLoading, navigate]);
-
-  useEffect(() => {
     if (isAdmin) {
       fetchUsers();
     }
   }, [isAdmin]);
 
+  const { currentPage, totalPages, paginatedItems, setCurrentPage, totalItems, pageSize } = usePagination(users);
   
   const fetchUsers = async () => {
     setLoading(true);
@@ -162,6 +157,7 @@ export default function Usuarios() {
 
   const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
     try {
+      console.log( currentStatus)
       const { error } = await supabase
         .from("profiles")
         .update({ ativo: !currentStatus })
@@ -196,7 +192,7 @@ export default function Usuarios() {
   };
 
   const formatDate = (date: string) => {
-    return new Date(date + 'T12:00:00').toLocaleDateString('pt-BR');
+    return new Date(date).toLocaleDateString('pt-BR');
   };
 
   if (authLoading) {
@@ -208,8 +204,6 @@ export default function Usuarios() {
       </AppLayout>
     );
   }
-
-  const { currentPage, totalPages, paginatedItems, setCurrentPage, totalItems, pageSize } = usePagination(users);
 
   if (!isAdmin) return null;
 
@@ -324,9 +318,8 @@ export default function Usuarios() {
                     <TableHead>Nome</TableHead>
                     <TableHead>E-mail</TableHead>
                     <TableHead>Função</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead>Criado em</TableHead>
-                    <TableHead>Ativo</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -362,11 +355,6 @@ export default function Usuarios() {
                                 ))}
                               </SelectContent>
                             </Select>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={user.ativo ? "default" : "secondary"}>
-                              {user.ativo ? "Ativo" : "Inativo"}
-                            </Badge>
                           </TableCell>
                           <TableCell>{formatDate(user.created_at)}</TableCell>
                           <TableCell>
