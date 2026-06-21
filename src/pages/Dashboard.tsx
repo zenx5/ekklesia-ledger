@@ -5,6 +5,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign, Users } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import RangeSelector from "@/components/RangeSelector";
 
 interface MonthlyData {
   month: string;
@@ -19,6 +20,7 @@ export default function Dashboard() {
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
   const [recentReports, setRecentReports] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState(1)
 
   useEffect(() => {
     fetchDashboardData();
@@ -134,7 +136,7 @@ export default function Dashboard() {
               <div className="text-2xl font-bold text-success">
                 {loading ? "..." : formatCurrency(totalEntradas)}
               </div>
-              <p className="text-xs text-muted-foreground">Este mês</p>
+              <RangeSelector value={range} onChange={setRange} />
             </CardContent>
           </Card>
 
@@ -149,7 +151,7 @@ export default function Dashboard() {
               <div className="text-2xl font-bold text-destructive">
                 {loading ? "..." : formatCurrency(totalSaidas)}
               </div>
-              <p className="text-xs text-muted-foreground">Este mês</p>
+              <RangeSelector value={range} onChange={setRange} />
             </CardContent>
           </Card>
 
@@ -164,7 +166,7 @@ export default function Dashboard() {
               <div className={`text-2xl font-bold ${saldo >= 0 ? "text-success" : "text-destructive"}`}>
                 {loading ? "..." : formatCurrency(saldo)}
               </div>
-              <p className="text-xs text-muted-foreground">Este mês</p>
+              <RangeSelector value={range} onChange={setRange} />
             </CardContent>
           </Card>
 
