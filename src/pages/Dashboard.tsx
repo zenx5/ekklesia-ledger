@@ -24,7 +24,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [range]);
 
   const getMonthRange = (monthsAgo) => {
     const ahora = new Date();
@@ -41,9 +41,8 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const { dataInicio, dataFim } = getMonthRange(7)
+      const { dataInicio, dataFim } = getMonthRange(range + 1)
       // Fetch total entradas (current month)
-      console.log( 'Dashboard', dataInicio, dataFim)
       const { data: entradasData } = await supabase
         .from("financial_reports")
         .select("total_arrecadacao,deleted_at")
@@ -59,6 +58,8 @@ export default function Dashboard() {
         .from("expenses")
         .select("valor,deleted_at")
         .is("deleted_at", null)
+        .gte("data_saida", dataInicio)
+        .lte("data_saida", dataFim)
       const saidasTotal = saidasData?.reduce((sum, e) => sum + Number(e.valor || 0), 0) || 0;
       setTotalSaidas(saidasTotal);
 
@@ -66,8 +67,10 @@ export default function Dashboard() {
       const { count } = await supabase
         .from("financial_reports")
         .select("*", { count: "exact", head: true })
-        .is("deleted_at", null);
-      setRecentReports(count || 0);
+        .is("deleted_at", null)
+        .gte("data_culto", dataInicio)
+        .lte("data_culto", dataFim);
+      setRecentReports( count || 0 );
 
       // Fetch last 6 months data for chart
       const monthlyStats: MonthlyData[] = [];
