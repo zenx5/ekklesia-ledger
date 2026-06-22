@@ -43,7 +43,6 @@ export default function Dashboard() {
     try {
       const { dataInicio, dataFim } = getMonthRange(period);
       // Fetch total entradas (current month)
-      console.log( 'Dashboard', dataInicio, dataFim)
       const { data: entradasData } = await supabase
         .from("financial_reports")
         .select("total_arrecadacao,deleted_at")
@@ -61,7 +60,6 @@ export default function Dashboard() {
         .is("deleted_at", null)
         .gte("data_saida", dataInicio)
         .lte("data_saida", dataFim)
-      console.log( saidasData )
         const saidasTotal = saidasData?.reduce((sum, e) => sum + Number(e.valor || 0), 0) || 0;
       setTotalSaidas(saidasTotal);
 
