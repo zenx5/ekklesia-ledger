@@ -22,6 +22,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState(5); // defual 1 month (current)
 
+  console.log(isAdmin ? 'is admin' : 'not is admin')
+
   useEffect(() => {
     fetchDashboardData();
   }, [period]);
