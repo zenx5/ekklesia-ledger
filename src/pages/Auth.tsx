@@ -81,7 +81,12 @@ export default function Auth() {
       });
     } else {
       toast({ title: "Bem-vindo!", description: "Login realizado com sucesso." });
-      navigate("/dashboard");
+      if( role === 'admin' ){
+        navigate("/dashboard");  
+      }
+      else{
+        navigate("/entradas");
+      }
     }
   };
 
