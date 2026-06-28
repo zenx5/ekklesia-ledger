@@ -20,7 +20,7 @@ export default function Dashboard() {
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
   const [recentReports, setRecentReports] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState(0); // defual 1 month (current)
+  const [period, setPeriod] = useState(5); // defual 1 month (current)
 
   console.log(isAdmin ? 'is admin' : 'not is admin')
 
