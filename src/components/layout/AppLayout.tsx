@@ -47,11 +47,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
   if (!user) return null;
 
   const navItems = [
-    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", adminOnly: false },
+    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", adminOnly: true },
     { href: "/entradas", icon: FileText, label: "Entradas", adminOnly: false },
     { href: "/saidas", icon: ArrowDownCircle, label: "Saídas", adminOnly: false },
-    { href: "/miembros", icon: IdCard, label: "Membros", adminOnly: false },
-    { href: "/relatorios", icon: BarChart3, label: "Relatórios", adminOnly: false },
+    { href: "/miembros", icon: IdCard, label: "Membros", adminOnly: true },
+    { href: "/relatorios", icon: BarChart3, label: "Relatórios", adminOnly: true },
     { href: "/auditoria", icon: ClipboardList, label: "Log de Auditoria", adminOnly: true },
     { href: "/usuarios", icon: Users, label: "Usuários", adminOnly: true },
     { href: "/permissoes", icon: Shield, label: "Permissões", adminOnly: true },

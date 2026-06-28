@@ -38,13 +38,18 @@ export default function Auth() {
   const [showResetForm, setShowResetForm] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, role } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
-      navigate("/dashboard");
+      if( role === 'admin' ){
+        navigate("/dashboard");  
+      }
+      else{
+        navigate("/entradas");
+      }
     }
   }, [user, navigate]);
 
