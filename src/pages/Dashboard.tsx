@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign, Users } from "lucide-react";
+import { toast } from "sonner";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import PeriodSelector from "@/components/PeriodSelector";
 
@@ -106,6 +107,9 @@ export default function Dashboard() {
       setMonthlyData(monthlyStats);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
+      if( location.href.includes('vercel.app') ) {
+        toast.error("Erro ao buscar dados, recarregue a página.")
+      }
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 type AppRole = "admin" | "operador";
@@ -58,6 +59,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
+      if( location.href.includes('vercel.app') ) {
+        toast.error("Erro ao buscar dados, recarregue a página.")
+      }
     }
   };
 
