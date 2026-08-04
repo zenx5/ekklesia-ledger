@@ -13,6 +13,25 @@ const getPaymentLabel = (p: string) => {
   return labels[p] || p;
 };
 
+function isMesCompleto(dataInicio: string, dataFim: string): boolean {
+  const inicio = new Date(`${dataInicio}T00:00:00`);
+  const fin = new Date(`${dataFim}T00:00:00`);
+  
+  if (inicio.getDate() !== 1) return false;
+  
+  const ultimoDiaMes = new Date(fin.getFullYear(), fin.getMonth() + 1, 0);
+  if (fin.getDate() !== ultimoDiaMes.getDate()) return false;
+  
+  return inicio.getMonth() === fin.getMonth() && inicio.getFullYear() === fin.getFullYear();
+}
+
+function formatMesAno(date: string): string {
+  const d = new Date(`${date}T00:00:00`);
+  const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  const meses_num = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
+  return `${meses_num[d.getMonth()]}/${d.getFullYear()}`;
+}
+
 interface EntradaReportData {
   data_culto: string;
   pastores_presentes: string | null;
@@ -232,7 +251,7 @@ export function generateGeneralPDF(dataInicio: string, dataFim: string, data: { 
       body: [
         [
           { content: 'LIVRO CAIXA', colSpan: 2 },
-          { content: 'Período: ' + dataInicio + ' a ' + dataFim, colSpan: 2 }
+          { content: isMesCompleto(dataInicio, dataFim) ? 'Período: ' + formatMesAno(dataInicio) : 'Período: ' + dataInicio + ' a ' + dataFim, colSpan: 2 }
         ],
         [
           { content: 'IGREJA EKKLESIA', colSpan: 2 },
@@ -255,7 +274,7 @@ export function generateGeneralPDF(dataInicio: string, dataFim: string, data: { 
       body: [
         ...items.map((item: { type: string } & (EntradaReportData | SaidaReportData)) => [
           {
-            content: item.type === 'entrada' ? 'Culto do ' + formatDate((item as EntradaReportData).data_culto) : item.descricao || '',
+            content: item.type === 'entrada' ? 'Culto ' + formatDate((item as EntradaReportData).data_culto) : item.descricao || '',
             styles: { halign: 'left' }
           },
           item.type === 'entrada' ? formatCurrency((item as EntradaReportData).total_arrecadacao || 0) : '',
