@@ -1,10 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -13,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { TrendingUp, TrendingDown, DollarSign, FileSearch } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import PeriodFilter from "@/components/PeriodFilter";
 import { generateGeneralPDF } from "@/lib/pdf-reports";
@@ -93,7 +90,7 @@ export default function Relatorios() {
       const [{ data: entradasData }, { data: saidasData }] = await fetchData(dataInicio, dataFim);
       const rangoMesAnterior = lastMonth(dataInicio);
       const [{ data: lastEntradasData }, { data: lastSaidasData }] = await fetchData(rangoMesAnterior.start, rangoMesAnterior.end);
-      
+
       const lastTotalEntradas = lastEntradasData.reduce((sum, e) => sum + Number(e.total_arrecadacao || 0), 0);
       const lastTotalSaidas = lastSaidasData.reduce((sum, e) => sum + Number(e.valor || 0), 0);
       setLastTotalSaidas(lastTotalEntradas - lastTotalSaidas);
