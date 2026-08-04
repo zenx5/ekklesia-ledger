@@ -38,8 +38,17 @@ interface ExpenseEntry {
 
 function lastMonth(date: string) {
   const fecha = new Date(`${date}T00:00:00`);
-  fecha.setDate(fecha.getDate() - 30);
-  return fecha.toISOString().split('T')[0];
+  const mesAnterior = fecha.getMonth() - 1;
+  const anio = mesAnterior < 0 ? fecha.getFullYear() - 1 : fecha.getFullYear();
+  const mes = mesAnterior < 0 ? 11 : mesAnterior;
+
+  const inicio = new Date(anio, mes, 1);
+  const fin = new Date(anio, mes + 1, 0);
+
+  return {
+    start: inicio.toISOString().split('T')[0],
+    end: fin.toISOString().split('T')[0]
+  };
 }
 
 export default function Relatorios() {
@@ -82,8 +91,8 @@ export default function Relatorios() {
 
     try {
       const [{ data: entradasData }, { data: saidasData }] = await fetchData(dataInicio, dataFim);
-      
-      const [{ data: lastEntradasData }, { data: lastSaidasData }] = await fetchData(lastMonth(dataInicio), lastMonth(dataFim));
+      const rangoMesAnterior = lastMonth(dataInicio);
+      const [{ data: lastEntradasData }, { data: lastSaidasData }] = await fetchData(rangoMesAnterior.start, rangoMesAnterior.end);
       
       const lastTotalEntradas = lastEntradasData.reduce((sum, e) => sum + Number(e.total_arrecadacao || 0), 0);
       const lastTotalSaidas = lastSaidasData.reduce((sum, e) => sum + Number(e.valor || 0), 0);

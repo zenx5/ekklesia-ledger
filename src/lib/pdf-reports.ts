@@ -232,15 +232,14 @@ export function generateGeneralPDF(dataInicio: string, dataFim: string, data: { 
       body: [
         [
           { content: 'LIVRO CAIXA', colSpan: 2 },
-          { content: 'Período: 06/2025', colSpan: 2 }
+          { content: 'Período: ' + dataInicio + ' a ' + dataFim, colSpan: 2 }
         ],
         [
-          { content: 'IGREJA DO EKKLESIA', colSpan: 2 },
-          { content: 'CNPJ: 00.000.000/0000-00', colSpan: 2 }
+          { content: 'IGREJA EKKLESIA', colSpan: 2 },
+          { content: 'CNPJ: 65.065.576/0001-68', colSpan: 2 }
         ],
         [
-          { content: '[ENDEREÇO]', colSpan: 2 },
-          { content: '[REGIÃO]', colSpan: 2 }
+          { content: 'Rua João Gardini, 108. Bairro Santo Antonio. Farroupilha - RS. Cep. 95181-041', colSpan: 2 }
         ]
       ]
     });
@@ -251,7 +250,7 @@ export function generateGeneralPDF(dataInicio: string, dataFim: string, data: { 
       styles: { lineColor: [0, 0, 0], lineWidth: 0, textColor: [0, 0, 0], fontSize: 9, halign: 'right' },
       headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], halign: 'right' },
       head: [
-        ['HISTOICO', 'ENTRADA', 'SAIDA'].map( h => ({ content: h, styles: { halign: h=='HISTOICO' ? 'left' : 'right', fontStyle: 'bold', borderWidth: 0.1  } }) )
+        ['HISTORICO', 'ENTRADA', 'SAIDA'].map( h => ({ content: h, styles: { halign: h=='HISTORICO' ? 'left' : 'right', fontStyle: 'bold', borderWidth: 0.1  } }) )
       ],
       body: [
         ...items.map((item: { type: string } & (EntradaReportData | SaidaReportData)) => [
