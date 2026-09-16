@@ -73,7 +73,7 @@ function generateHeaderTable(doc, title: string){
     });
 }
 
-export function generateEntradaPDF(data: EntradaReportData) {
+function generateEntradaPDF(data: EntradaReportData) {
     const doc = new jsPDF();
 
     // 1. Encabezado (Logo y Título)
@@ -167,7 +167,7 @@ interface SaidaReportData {
   observacoes: string | null;
 }
 
-export function generateSaidaPDF(expense: SaidaReportData) {
+function generateSaidaPDF(expense: SaidaReportData) {
     const doc = new jsPDF();
 
     // 1. Encabezado (Logo y Título)
@@ -232,7 +232,7 @@ export function generateSaidaPDF(expense: SaidaReportData) {
     doc.save('relatorio-saida-' + formatDate(expense.data_saida) + '.pdf');
 }
 
-export function generateGeneralPDF(dataInicio: string, dataFim: string, data: { entradas: EntradaReportData[]; saidas: SaidaReportData[], summary?: { entradas: string; saidas: string; past: string; saldo: string } }) {
+function generateGeneralPDF(dataInicio: string, dataFim: string, data: { entradas: EntradaReportData[]; saidas: SaidaReportData[], summary?: { entradas: string; saidas: string; past: string; saldo: string } }) {
     const doc = new jsPDF();
 
     const items = [
@@ -350,4 +350,10 @@ function calculateDay(date: string) {
   const days = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
   const d = new Date(date + "T12:00:00");
   return days[d.getDay()];
+}
+
+export {
+  generateEntradaPDF,
+  generateSaidaPDF,
+  generateGeneralPDF
 }
