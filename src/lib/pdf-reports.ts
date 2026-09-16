@@ -352,8 +352,137 @@ function calculateDay(date: string) {
   return days[d.getDay()];
 }
 
+function generateFullSaidaPDF(dataInicio: string, dataFim: string, reports: any[]) {
+  const doc = new jsPDF();
+
+  const periodo = dataInicio && dataFim ? `${dataInicio} a ${dataFim}` : dataInicio || dataFim || 'todo o período';
+
+  generateHeaderTable(doc, 'RELATÓRIO FINANCEIRO - SAÍDAS (PERÍODO)');
+
+  autoTable(doc, {
+    startY: (doc as any).lastAutoTable.finalY + 5,
+    theme: 'grid',
+    styles: { lineColor: [0, 0, 0], lineWidth: 0.1, textColor: [0, 0, 0], fontSize: 8 },
+    headStyles: { fillColor: [242, 242, 242], textColor: [0, 0, 0], halign: 'center', fontStyle: 'bold' },
+    head: [['DATA', 'DESCRIÇÃO', 'CATEGORIA', 'PAGAMENTO', 'VALOR', 'RESPONSÁVEL']],
+    body: reports.length
+      ? reports.map((report: SaidaReportData) => [
+          formatDate(report.data_saida),
+          report.descricao || 'NÃO INFORMADO',
+          report.categoria || 'NÃO INFORMADO',
+          getPaymentLabel(report.forma_pagamento || ''),
+          formatCurrency(Number(report.valor) || 0),
+          report.responsavel || 'NÃO INFORMADO'
+        ])
+      : [[{ content: 'NENHUMA SAÍDA ENCONTRADA NO PERÍODO', colSpan: 6 }]],
+    columnStyles: {
+      0: { cellWidth: 22 },
+      1: { cellWidth: 42 },
+      2: { cellWidth: 28 },
+      3: { cellWidth: 24 },
+      4: { cellWidth: 25 },
+      5: { cellWidth: 30 }
+    }
+  });
+
+  const total = reports.reduce((sum, report: SaidaReportData) => sum + Number(report.valor || 0), 0);
+
+  autoTable(doc, {
+    startY: (doc as any).lastAutoTable.finalY + 8,
+    theme: 'grid',
+    styles: { lineColor: [0, 0, 0], lineWidth: 0.1, textColor: [0, 0, 0], fontSize: 10, fontStyle: 'bold' },
+    body: [
+      [
+        { content: 'TOTAL DO PERÍODO', colSpan: 5, styles: { halign: 'right', fillColor: [249, 249, 249] } },
+        { content: formatCurrency(total), styles: { fillColor: [249, 249, 249] } }
+      ]
+    ],
+    columnStyles: { 0: { cellWidth: 80 } }
+  });
+
+  signDocument(doc);
+  doc.save(`relatorio-saidas-${dataInicio || 'inicio'}-${dataFim || 'fim'}.pdf`);
+}
+
+function generateFullEntradaPDF(dataInicio: string, dataFim: string, reports: any[]) {
+  const doc = new jsPDF();
+
+  const periodo = dataInicio && dataFim ? `${dataInicio} a ${dataFim}` : dataInicio || dataFim || 'todo o período';
+
+  generateHeaderTable(doc, 'RELATÓRIO FINANCEIRO - ENTRADAS (PERÍODO)');
+
+  autoTable(doc, {
+    startY: (doc as any).lastAutoTable.finalY + 5,
+    theme: 'grid',
+    styles: { lineColor: [0, 0, 0], lineWidth: 0.1, textColor: [0, 0, 0], fontSize: 8 },
+    headStyles: { fillColor: [242, 242, 242], textColor: [0, 0, 0], halign: 'center', fontStyle: 'bold' },
+    head: [['DATA', 'PASTORES', 'PRELETOR', 'OFERTAS', 'DIZIMOS', 'TOTAL']],
+    body: reports.length
+      ? reports.map((report: EntradaReportData) => {
+          const dizimos = report.tithers?.reduce((sum, t) => sum + Number(t.valor || 0), 0) ?? Number(report.dizimos_total || 0);
+          const total = Number(report.total_arrecadacao || 0) || (Number(report.ofertas_gerais || 0) + dizimos);
+
+          return [
+            formatDate(report.data_culto),
+            report.pastores_presentes || 'NÃO INFORMADO',
+            report.preletor || 'NÃO INFORMADO',
+            formatCurrency(Number(report.ofertas_gerais || 0)),
+            formatCurrency(dizimos),
+            formatCurrency(total)
+          ];
+        })
+      : [[{ content: 'NENHUMA ENTRADA ENCONTRADA NO PERÍODO', colSpan: 6 }]],
+    columnStyles: {
+      0: { cellWidth: 22 },
+      1: { cellWidth: 28 },
+      2: { cellWidth: 28 },
+      3: { cellWidth: 25 },
+      4: { cellWidth: 25 },
+      5: { cellWidth: 25 }
+    }
+  });
+
+  const totalOfertas = reports.reduce((sum, report: EntradaReportData) => sum + Number(report.ofertas_gerais || 0), 0);
+  const totalDizimos = reports.reduce((sum, report: EntradaReportData) => {
+    const dizimos = report.tithers?.reduce((inner, t) => inner + Number(t.valor || 0), 0) ?? Number(report.dizimos_total || 0);
+    return sum + dizimos;
+  }, 0);
+  const totalArrecadado = reports.reduce((sum, report: EntradaReportData) => sum + Number(report.total_arrecadacao || 0), 0);
+
+  autoTable(doc, {
+    startY: (doc as any).lastAutoTable.finalY + 8,
+    theme: 'grid',
+    styles: { lineColor: [0, 0, 0], lineWidth: 0.1, textColor: [0, 0, 0], fontSize: 9, fontStyle: 'bold' },
+    body: [
+      [
+        { content: 'OFERTAS', colSpan: 3, styles: { halign: 'right', fillColor: [249, 249, 249] } },
+        { content: formatCurrency(totalOfertas), styles: { fillColor: [249, 249, 249] } },
+        { content: 'DIZIMOS', styles: { halign: 'right', fillColor: [249, 249, 249] } },
+        { content: formatCurrency(totalDizimos), styles: { fillColor: [249, 249, 249] } }
+      ],
+      [
+        { content: 'TOTAL ARRECADADO', colSpan: 5, styles: { halign: 'right', fillColor: [221, 221, 221] } },
+        { content: formatCurrency(totalArrecadado), styles: { fillColor: [221, 221, 221] } }
+      ]
+    ],
+    columnStyles: {
+      0: { cellWidth: 25 },
+      1: { cellWidth: 25 },
+      2: { cellWidth: 25 },
+      3: { cellWidth: 25 },
+      4: { cellWidth: 25 },
+      5: { cellWidth: 25 }
+    }
+  });
+
+  signDocument(doc);
+  doc.save(`relatorio-entradas-${dataInicio || 'inicio'}-${dataFim || 'fim'}.pdf`);
+}
+
 export {
   generateEntradaPDF,
   generateSaidaPDF,
+  generateFullEntradaPDF,
+  generateFullSaidaPDF,
   generateGeneralPDF
 }

@@ -29,6 +29,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import PeriodFilter from "@/components/PeriodFilter";
+import { generateFullEntradaPDF } from "@/lib/pdf-reports";
 
 interface Tither {
   id?: string;
@@ -499,7 +500,10 @@ export default function Entradas() {
             setDataFim('');
             setDataInicio('');
           }}
-          onAction={()=>console.log('gerar...')}
+          onAction={
+            (reports.filter(filterReport).length>0) ?
+            () => generateFullEntradaPDF(dataInicio, dataFim, reports.filter(filterReport)) : undefined
+          }
           labelAction="Gerar Relatorio"
         />
         {/* Reports List */}

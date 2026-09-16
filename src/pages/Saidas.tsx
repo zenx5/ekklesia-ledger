@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Save, Loader2, Trash2, Pencil, Printer } from "lucide-react";
-import { generateSaidaPDF } from "@/lib/pdf-reports";
+import { generateFullSaidaPDF, generateSaidaPDF } from "@/lib/pdf-reports";
 import CategorySelector from "@/components/CategorySelector";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
@@ -278,7 +278,10 @@ export default function Saidas() {
             setDataFim('');
             setDataInicio('');
           }}
-          onAction={()=>console.log('gerar...')}
+          onAction={
+            (expenses.filter(filterReport).length>0) ?
+            () => generateFullSaidaPDF(dataInicio, dataFim, expenses.filter(filterReport)) : undefined
+          }
           labelAction="Gerar Relatorio"
         />
 
