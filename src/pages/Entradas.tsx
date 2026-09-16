@@ -499,6 +499,8 @@ export default function Entradas() {
             setDataFim('');
             setDataInicio('');
           }}
+          onAction={()=>console.log('gerar...')}
+          labelAction="Gerar Relatorio"
         />
         {/* Reports List */}
         <ReportsTable

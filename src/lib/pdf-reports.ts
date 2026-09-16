@@ -301,7 +301,7 @@ export function generateGeneralPDF(dataInicio: string, dataFim: string, data: { 
           { content: data.summary?.saidas || '', styles: { halign: 'left' }, colSpan: 1 }
         ],
         [
-          { content: 'SAÍDAS PASSADAS', styles: { halign: 'right' }, colSpan: 2 },
+          { content: 'SALDO DO MÊS ANTERIOR', styles: { halign: 'right' }, colSpan: 2 },
           { content: data.summary?.past || '', styles: { halign: 'left' }, colSpan: 1 }
         ],
         [

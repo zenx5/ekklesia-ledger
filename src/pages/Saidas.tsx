@@ -278,6 +278,8 @@ export default function Saidas() {
             setDataFim('');
             setDataInicio('');
           }}
+          onAction={()=>console.log('gerar...')}
+          labelAction="Gerar Relatorio"
         />
 
         <Card>
