@@ -142,7 +142,7 @@ export default function Relatorios() {
                 entradas: formatCurrency(totalEntradas),
                 saidas: formatCurrency(totalSaidas),
                 past: formatCurrency(lastTotalSaidas),
-                saldo: formatCurrency(saldo)
+                saldo: formatCurrency(saldo-lastTotalSaidas)
               }
             }) :
             undefined
@@ -299,7 +299,7 @@ export default function Relatorios() {
                       <TableRow className="bg-muted/50">
                         <TableCell className="font-bold text-lg">Saldo Final</TableCell>
                         <TableCell className={`text-right font-bold text-lg ${saldo >= 0 ? "text-success" : "text-destructive"}`}>
-                          {formatCurrency(saldo)}
+                          {formatCurrency(saldo+lastTotalSaidas)}
                         </TableCell>
                       </TableRow>
                     </TableBody>
