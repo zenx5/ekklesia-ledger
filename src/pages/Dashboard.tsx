@@ -15,15 +15,35 @@ interface MonthlyData {
 }
 
 export default function Dashboard() {
-  const { isAdmin } = useAuth();
+  const { user } = useAuth();
+  const userId = user?.id;
   const [totalEntradas, setTotalEntradas] = useState(0);
   const [totalSaidas, setTotalSaidas] = useState(0);
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
   const [recentReports, setRecentReports] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState(5); // defual 1 month (current)
+  const [period, setPeriod] = useState(5);
+  const [periodUserId, setPeriodUserId] = useState<string | null>(null);
 
-  console.log(isAdmin ? 'is admin' : 'not is admin')
+  useEffect(() => {
+    if (!userId) {
+      setPeriodUserId(null);
+      return;
+    }
+
+    const storedPeriod = localStorage.getItem(`dashboard-period-${userId}`);
+    const parsedPeriod = storedPeriod === null ? NaN : Number(storedPeriod);
+    const validPeriods = [-1, 0, 1, 2, 5, 11];
+
+    setPeriod(validPeriods.includes(parsedPeriod) ? parsedPeriod : 5);
+    setPeriodUserId(userId);
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId || periodUserId !== userId) return;
+
+    localStorage.setItem(`dashboard-period-${userId}`, String(period));
+  }, [period, periodUserId, userId]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -31,13 +51,14 @@ export default function Dashboard() {
 
   const getMonthRange = (monthsAgo) => {
     const ahora = new Date();
-    // Fecha de inicio: Primero de mes hace 'n' meses
-    const dataInicio = new Date(ahora.getFullYear(), ahora.getMonth() - monthsAgo, 1);
+    const dataInicio = monthsAgo < 0
+      ? null
+      : new Date(ahora.getFullYear(), ahora.getMonth() - monthsAgo, 1);
     // Formatear a YYYY-MM-DD para Supabase/PostgreSQL
     const format = (date) => date.toISOString().split('T')[0];
 
     return {
-      dataInicio: format(dataInicio),
+      dataInicio: dataInicio ? format(dataInicio) : null,
       dataFim: format(ahora)
     };
   };
@@ -46,32 +67,35 @@ export default function Dashboard() {
     try {
       const { dataInicio, dataFim } = getMonthRange(period);
       // Fetch total entradas (current month)
-      const { data: entradasData } = await supabase
+      let entradasQuery = supabase
         .from("financial_reports")
         .select("total_arrecadacao,deleted_at")
-        .is("deleted_at", null)
-        .gte("data_culto", dataInicio)
-        .lte("data_culto", dataFim)
+        .is("deleted_at", null);
+      if (dataInicio) entradasQuery = entradasQuery.gte("data_culto", dataInicio);
+      const { data: entradasData } = await entradasQuery
+        .lte("data_culto", dataFim);
 
       const entradasTotal = entradasData?.reduce((sum, r) => sum + Number(r.total_arrecadacao || 0), 0) || 0;
       setTotalEntradas(entradasTotal);
 
       // Fetch total saidas (current month)
-      const { data: saidasData } = await supabase
+      let saidasQuery = supabase
         .from("expenses")
         .select("*")
-        .is("deleted_at", null)
-        .gte("data_saida", dataInicio)
-        .lte("data_saida", dataFim)
+        .is("deleted_at", null);
+      if (dataInicio) saidasQuery = saidasQuery.gte("data_saida", dataInicio);
+      const { data: saidasData } = await saidasQuery
+        .lte("data_saida", dataFim);
         const saidasTotal = saidasData?.reduce((sum, e) => sum + Number(e.valor || 0), 0) || 0;
       setTotalSaidas(saidasTotal);
 
       // Fetch recent reports count
-      const { count } = await supabase
+      let reportsQuery = supabase
         .from("financial_reports")
         .select("*", { count: "exact", head: true })
-        .is("deleted_at", null)
-        .gte("data_culto", dataInicio)
+        .is("deleted_at", null);
+      if (dataInicio) reportsQuery = reportsQuery.gte("data_culto", dataInicio);
+      const { count } = await reportsQuery
         .lte("data_culto", dataFim);
       setRecentReports(count || 0);
 

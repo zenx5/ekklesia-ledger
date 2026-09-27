@@ -7,5 +7,6 @@ export default function PeriodSelector({ period, onChange }) {
         <option value={2}>Últimos 3 meses</option>
         <option value={5}>Último 6 meses</option>
         <option value={11}>Último ano</option>
+        <option value={-1}>Todo o período</option>
     </select>)
 }
